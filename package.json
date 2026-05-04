@@ -1,0 +1,26 @@
+{
+  "name": "writenova",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "client": "cd client && npm run dev",
+    "server": "cd server && node src/index.js",
+    "dev": "concurrently \"npm run client\" \"npm run server\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nirajkumardangi/writenova.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/nirajkumardangi/writenova/issues"
+  },
+  "homepage": "https://github.com/nirajkumardangi/writenova#readme",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
