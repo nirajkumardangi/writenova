@@ -1,4 +1,4 @@
-# 🤖 AI Content SaaS — MERN Stack
+# 🤖 Write Nova AI : AI Content SaaS — MERN Stack
 
 > A full-stack AI-powered content generation platform built with Next.js, Node.js/Express, MongoDB, and Google Gemini. Subscriptions via Stripe. Deployed on Vercel + Railway.
 
@@ -9,7 +9,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://mongodb.com/)
 [![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=flat-square&logo=stripe&logoColor=white)](https://stripe.com/)
 [![Gemini](https://img.shields.io/badge/Google-Gemini_AI-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
 **[Live Demo](#)** · **[Blueprint Doc](#)** · **[Report Bug](#)** · **[Request Feature](#)**
 
@@ -21,7 +21,7 @@
 
 ### Home Page
 
-![Landing Page UI](docs/ui-screenshots/landing-page.png)
+![Landing Page UI](docs/screens/landing-page.png)
 
 ---
 
@@ -231,8 +231,8 @@ Users (1) ──────────────── (1)    Subscriptions
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/ai-content-saas.git
-cd ai-content-saas
+git clone https://github.com/nirajkumardangi/writenova.git
+cd writenova
 ```
 
 ### 2. Setup the Backend (`/server`)
@@ -294,7 +294,7 @@ NODE_ENV=development
 CLIENT_URL=http://localhost:3000
 
 # MongoDB Atlas
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/ai-saas
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/writenova
 
 # JWT
 JWT_SECRET=your-super-secret-32-char-key-here
@@ -326,7 +326,7 @@ UPSTASH_REDIS_REST_TOKEN=...
 ## 📁 Project Structure
 
 ```
-ai-content-saas/
+writenova/
 │
 ├── /client                     # Next.js 14 Frontend (Vercel)
 │   ├── app/
@@ -354,6 +354,10 @@ ai-content-saas/
 │       ├── config/             # db.ts, passport.ts, constants.ts
 │       ├── app.ts              # Express setup
 │       └── server.ts           # Entry point
+│
+├── /docs                       # Project documentation
+│   ├── /system-design          # Architecture, flows, schemas
+│   └── /screens         # UI previews and product screens
 │
 ├── README.md
 └── .gitignore
@@ -436,9 +440,9 @@ perf(db): add compound index on userId + createdAt
 
 | Category          | Technology                                                  |
 | ----------------- | ----------------------------------------------------------- |
-| **Frontend**      | Next.js 14 (App Router), TypeScript, TailwindCSS, shadcn/ui |
+| **Frontend**      | Next.js 14 (App Router), JavaScript, TailwindCSS, shadcn/ui |
 | **State**         | Zustand (global), TanStack Query (server state)             |
-| **Backend**       | Node.js, Express.js, TypeScript                             |
+| **Backend**       | Node.js, Express.js, JavaScript                             |
 | **Auth**          | JWT (HttpOnly cookie), Passport.js (Google OAuth), bcrypt   |
 | **Database**      | MongoDB Atlas, Mongoose ODM                                 |
 | **AI**            | Google Gemini 1.5 Pro (`@google/generative-ai`)             |
