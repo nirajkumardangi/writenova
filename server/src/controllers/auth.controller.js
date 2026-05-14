@@ -106,8 +106,13 @@ export async function verifyOTP(req, res) {
 
     // create user if not exists
     if (!user) {
+      const baseUsername = email.split("@")[0];
+
+      const username = baseUsername + Math.floor(Math.random() * 1000);
+
       user = await User.create({
         email,
+        username,
       });
     }
 
