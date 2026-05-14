@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import AuthModal from "../auth/auth-modal";
 
 const navLinks = [
   { label: "Features", href: "/" },
   { label: "Write", href: "/" },
-  { label: "Sign in", href: "/" },
 ];
 
 export default function Navbar() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [mode, setMode] = useState("signup");
+
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f2ede3]">
       <div className="mx-auto flex h-16 md:h-18 max-w-7xl items-center justify-between px-6">
@@ -17,7 +21,7 @@ export default function Navbar() {
           href="/"
           className="font-serif text-[1.4rem] md:text-[1.6rem] font-bold tracking-[-0.01em] text-[#181818]"
         >
-          WriteNova AI
+          WriteNova
         </Link>
 
         {/* Action Area */}
@@ -33,17 +37,36 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <button
+              onClick={() => {
+                setIsAuthModalOpen(true);
+                setMode("login");
+              }}
+              className="px-4 py-2 text-[0.9375rem] text-[#181818]/70 transition-colors hover:text-[#181818] cursor-pointer"
+            >
+              Sign in
+            </button>
           </nav>
 
           {/* Get Started Button - Always Visible */}
-          <Link
-            href="/"
-            className="rounded-full bg-[#181818] px-4 py-2 md:px-5 md:py-2.5 text-[0.875rem] md:text-[0.9375rem] font-medium text-white transition-opacity hover:opacity-90 active:scale-95"
+          <button
+            onClick={() => {
+              setIsAuthModalOpen(true);
+              setMode("signup");
+            }}
+            className="rounded-full bg-[#181818] px-4 py-2 md:px-5 md:py-2.5 text-[0.875rem] md:text-[0.9375rem] font-medium text-white transition-opacity hover:opacity-90 active:scale-95 cursor-pointer"
           >
             Get started
-          </Link>
+          </button>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        mode={mode}
+        setMode={setMode}
+      />
     </header>
   );
 }

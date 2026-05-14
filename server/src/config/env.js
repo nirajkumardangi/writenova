@@ -9,6 +9,7 @@ const requiredEnvVars = [
   "REFRESH_TOKEN_SECRET",
   "SMTP_EMAIL",
   "SMTP_PASSWORD",
+  "GOOGLE_CLIENT_ID",
 ];
 
 requiredEnvVars.forEach((key) => {
@@ -25,6 +26,7 @@ const env = Object.freeze({
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
   SMTP_EMAIL: process.env.SMTP_EMAIL,
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 });
 
 export default env;

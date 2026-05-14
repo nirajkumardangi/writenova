@@ -4,7 +4,7 @@ import env from "./env.js";
 async function connectDB() {
   try {
     await mongoose.connect(env.MONGODB_URI, {
-      dbName: "writenova",
+      dbName: "WriteNova",
     });
     console.log("MongoDB connected ✅");
   } catch (error) {
