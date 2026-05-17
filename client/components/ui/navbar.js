@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import AuthModal from "../auth/auth-modal";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { label: "Features", href: "/" },
@@ -10,8 +10,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [mode, setMode] = useState("signup");
+  const { isAuthModalOpen, closeAuthModal, authModalMode, setAuthModalMode, openAuthModal } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f2ede3]">
@@ -38,10 +37,7 @@ export default function Navbar() {
               </Link>
             ))}
             <button
-              onClick={() => {
-                setIsAuthModalOpen(true);
-                setMode("login");
-              }}
+              onClick={() => openAuthModal("login")}
               className="px-4 py-2 text-[0.9375rem] text-[#181818]/70 transition-colors hover:text-[#181818] cursor-pointer"
             >
               Sign in
@@ -50,10 +46,7 @@ export default function Navbar() {
 
           {/* Get Started Button - Always Visible */}
           <button
-            onClick={() => {
-              setIsAuthModalOpen(true);
-              setMode("signup");
-            }}
+            onClick={() => openAuthModal("signup")}
             className="rounded-full bg-[#181818] px-4 py-2 md:px-5 md:py-2.5 text-[0.875rem] md:text-[0.9375rem] font-medium text-white transition-opacity hover:opacity-90 active:scale-95 cursor-pointer"
           >
             Get started
@@ -63,9 +56,9 @@ export default function Navbar() {
 
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        mode={mode}
-        setMode={setMode}
+        onClose={closeAuthModal}
+        mode={authModalMode}
+        setMode={setAuthModalMode}
       />
     </header>
   );
