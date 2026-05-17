@@ -235,29 +235,29 @@ git clone https://github.com/nirajkumardangi/writenova.git
 cd writenova
 ```
 
-### 2. Setup the Backend (`/server`)
+### 2. Install Workspace Dependencies
 
 ```bash
-cd server
 npm install
-cp .env.example .env
-# Fill in .env values (see Environment Variables section below)
-npm run dev
+```
+
+### 3. Setup the Backend (`/server`)
+
+```bash
+# Create server/.env and fill in values (see Environment Variables section below)
+npm run dev:server
 # Server runs at http://localhost:5000
 ```
 
-### 3. Setup the Frontend (`/client`)
+### 4. Setup the Frontend (`/client`)
 
 ```bash
-cd client
-npm install
-cp .env.example .env.local
-# Fill in .env.local values
-npm run dev
+# Create client/.env.local and fill in values
+npm run dev:client
 # Client runs at http://localhost:3000
 ```
 
-### 4. Setup Stripe Webhook (Local Dev)
+### 5. Setup Stripe Webhook (Local Dev)
 
 ```bash
 # Install Stripe CLI

@@ -8,6 +8,14 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState("signup");
+
+  const openAuthModal = (mode = "signup") => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,7 +50,7 @@ export function AuthProvider({ children }) {
     try {
       await axios.post("http://localhost:5000/api/auth/logout", {}, { withCredentials: true });
     } catch (err) {
-      console.error(err);
+      // Ignore 401 errors during logout as the user is likely already unauthenticated
     }
     setUser(null);
     localStorage.removeItem("accessToken");
@@ -50,7 +58,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, isAuthModalOpen, authModalMode, setAuthModalMode, openAuthModal, closeAuthModal }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,13 +2,13 @@
 # ROOT
 # =========================
 node_modules/
-package-lock.json
 plan.html
 
 # =========================
 # CLIENT (Next.js)
 # =========================
 client/node_modules/
+client/package-lock.json
 client/.next/
 client/out/
 client/build/
@@ -17,6 +17,7 @@ client/build/
 # SERVER (Node.js)
 # =========================
 server/node_modules/
+server/package-lock.json
 server/dist/
 server/build/
 

@@ -4,10 +4,12 @@ import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 
+import { useCallback } from "react";
+
 export default function GoogleLoginButton({ mode = "signup", onClose }) {
   const { login } = useAuth();
 
-  const handleSuccess = async (credentialResponse) => {
+  const handleSuccess = useCallback(async (credentialResponse) => {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/google", {
         token: credentialResponse.credential,
@@ -23,16 +25,18 @@ export default function GoogleLoginButton({ mode = "signup", onClose }) {
     } catch (error) {
       console.error("Google login error:", error.response?.data || error);
     }
-  };
+  }, [login, onClose]);
+
+  const handleError = useCallback(() => {
+    console.log("Login Failed");
+  }, []);
 
   return (
     <div className="flex w-full justify-center overflow-hidden rounded-full">
       <GoogleLogin
         onSuccess={handleSuccess}
-        onError={() => {
-          console.log("Login Failed");
-        }}
-        text={mode === "signup" ? "signup_with" : "signin_with"}
+        onError={handleError}
+        text="continue_with"
         shape="pill"
         width="320"
       />

@@ -1,25 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { X, Mail } from "lucide-react";
-import GoogleProvider from "./google-provider";
-import GoogleLoginButton from "./google-login-button";
-import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import { Mail, X } from "lucide-react";
+import { useState } from "react";
+import GoogleLoginButton from "./google-login-button";
 
 export default function AuthModal({ isOpen, onClose, mode, setMode }) {
   const { login } = useAuth();
   const [view, setView] = useState("options"); // "options" | "email" | "otp"
-  
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  
+
   const [loading, setLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState("");
-
-  if (!isOpen) return null;
 
   const handleClose = () => {
     setView("options"); // Reset state on close
@@ -40,12 +37,12 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
   const handleOtpChange = (index, value) => {
     // Only allow numeric input
     if (value && !/^\d+$/.test(value)) return;
-    
+
     if (value.length > 1) value = value.slice(-1);
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    
+
     // Move to next input if value is entered
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
@@ -71,7 +68,9 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
       setView("otp");
       setOtp(["", "", "", "", "", ""]);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send OTP. Please try again.");
+      setError(
+        err.response?.data?.message || "Failed to send OTP. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -85,24 +84,29 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
     try {
       setIsVerifying(true);
       setError("");
-      const res = await axios.post("http://localhost:5000/api/auth/verify-otp", { 
-        email, 
-        otp: otpString 
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/verify-otp",
+        {
+          email,
+          otp: otpString,
+        },
+      );
       console.log("Login successful:", res.data);
       login(res.data.user, res.data.accessToken);
       handleClose(); // Close the modal upon success
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid OTP. Please check and try again.");
+      setError(
+        err.response?.data?.message ||
+          "Invalid OTP. Please check and try again.",
+      );
     } finally {
       setIsVerifying(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 sm:bg-[#F3F4F6]/80 sm:backdrop-blur-sm">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-white/95 sm:bg-[#F3F4F6]/80 sm:backdrop-blur-sm ${isOpen ? '' : 'hidden'}`}>
       <div className="relative flex w-full max-w-[570px] flex-col items-center justify-center rounded bg-white p-10 shadow-2xl sm:p-14">
-        <GoogleProvider>
           <button
             onClick={handleClose}
             className="absolute right-4 top-4 z-10 text-gray-400 transition-colors hover:text-gray-800 sm:right-6 sm:top-6 cursor-pointer"
@@ -134,7 +138,9 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
               </div>
 
               <p className="mt-8 text-[15px] text-gray-800">
-                {mode === "signup" ? "Already have an account? " : "No account? "}
+                {mode === "signup"
+                  ? "Already have an account? "
+                  : "No account? "}
                 <button
                   onClick={toggleMode}
                   className="font-bold text-[#1a8917] cursor-pointer hover:text-[#105c0f] hover:underline"
@@ -204,14 +210,22 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
                   />
                 </div>
 
-                {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+                {error && (
+                  <p className="text-red-500 text-sm mb-4 text-center">
+                    {error}
+                  </p>
+                )}
 
                 <button
                   type="submit"
                   disabled={loading}
                   className="mb-8 w-full rounded-full bg-black py-[10px] text-[15px] font-medium text-white transition-opacity cursor-pointer hover:bg-black/80 disabled:opacity-50"
                 >
-                  {loading ? "Sending OTP..." : (mode === "signup" ? "Create account" : "Sign in")}
+                  {loading
+                    ? "Sending OTP..."
+                    : mode === "signup"
+                      ? "Create account"
+                      : "Sign in"}
                 </button>
               </form>
 
@@ -226,7 +240,9 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
               </button>
 
               <p className="text-[15px] text-gray-800">
-                {mode === "signup" ? "Already have an account? " : "No account? "}
+                {mode === "signup"
+                  ? "Already have an account? "
+                  : "No account? "}
                 <button
                   onClick={toggleMode}
                   className="font-bold cursor-pointer text-[#1a8917] hover:text-[#105c0f] hover:underline"
@@ -258,11 +274,16 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
                 Check your email inbox
               </h2>
               <p className="mb-10 text-center text-[15px] text-gray-800 leading-relaxed">
-                To sign {mode === "signup" ? "up" : "in"}, enter the code we sent to:<br />
+                To sign {mode === "signup" ? "up" : "in"}, enter the code we
+                sent to:
+                <br />
                 <strong>{email}</strong>
               </p>
 
-              <form className="w-full flex flex-col items-center" onSubmit={handleVerifyOTP}>
+              <form
+                className="w-full flex flex-col items-center"
+                onSubmit={handleVerifyOTP}
+              >
                 <div className="mb-10 flex w-full justify-between gap-2 sm:gap-3 px-2 sm:px-6">
                   {otp.map((digit, index) => (
                     <input
@@ -279,7 +300,11 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
                   ))}
                 </div>
 
-                {error && <p className="text-red-500 text-sm mb-6 text-center">{error}</p>}
+                {error && (
+                  <p className="text-red-500 text-sm mb-6 text-center">
+                    {error}
+                  </p>
+                )}
 
                 <button
                   type="submit"
@@ -300,7 +325,6 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
               </button>
             </div>
           )}
-        </GoogleProvider>
       </div>
     </div>
   );

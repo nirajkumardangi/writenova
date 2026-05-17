@@ -7,7 +7,7 @@ import MainLayout from "@/components/layout/MainLayout";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="scroll-smooth antialiased">
+    <html lang="en" className="scroll-smooth antialiased" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
