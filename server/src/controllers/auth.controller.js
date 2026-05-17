@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 import env from "../config/env.js";
 import { redis } from "../config/redis.js";
+import { OAuth2Client } from "google-auth-library";
 
 import User from "../models/user.model.js";
 
@@ -106,8 +107,13 @@ export async function verifyOTP(req, res) {
 
     // create user if not exists
     if (!user) {
+      const baseUsername = email.split("@")[0];
+
+      const username = baseUsername + Math.floor(Math.random() * 1000);
+
       user = await User.create({
         email,
+        username,
       });
     }
 
@@ -186,6 +192,85 @@ export async function refreshToken(req, res) {
     });
   }
 }
+
+/* 
+=============================
+LOGIN WITH GOOGLE
+=============================
+*/
+
+const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        message: "Google token required",
+      });
+    }
+
+    // verify token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: env.GOOGLE_CLIENT_ID,
+    });
+
+    // user info from google
+    const payload = ticket.getPayload();
+
+    const { email, name, picture, email_verified } = payload;
+
+    // security check
+    if (!email_verified) {
+      return res.status(400).json({
+        message: "Google email not verified",
+      });
+    }
+
+    // check existing user
+    let user = await User.findOne({ email });
+
+    // create user
+    if (!user) {
+      const username = email.split("@")[0] + Math.floor(Math.random() * 1000);
+
+      user = await User.create({
+        email,
+        username,
+        avatar: picture,
+      });
+    }
+
+    // generate tokens
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // save refresh token
+    await redis.set(`refresh_token:${user._id}`, refreshToken, {
+      EX: 7 * 24 * 60 * 60,
+    });
+
+    // secure cookie
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      user,
+      accessToken,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
 /* 
 =============================

@@ -2,10 +2,12 @@ import "./globals.css";
 
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
+import { Providers } from "@/providers/Providers";
+import MainLayout from "@/components/layout/MainLayout";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="scroll-smooth antialiased">
+    <html lang="en" className="scroll-smooth antialiased" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -20,9 +22,11 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className="h-screen overflow-hidden bg-[#F7F4ED] flex flex-col">
-        <Navbar />
-        <main className="flex-1 relative overflow-hidden">{children}</main>
-        <Footer />
+        <Providers>
+          <MainLayout>
+            {children}
+          </MainLayout>
+        </Providers>
       </body>
     </html>
   );

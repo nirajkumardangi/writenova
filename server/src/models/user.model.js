@@ -11,6 +11,17 @@ const userSchema = new mongoose.Schema(
       trim: true,
       validate: [validator.isEmail, "Please provide a valid email address"],
     },
+
+    username: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
+
+    avatar: {
+      type: String,
+      default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+    },
   },
   {
     timestamps: true,
