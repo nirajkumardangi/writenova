@@ -1,31 +1,34 @@
 "use client";
 
 import { GoogleLogin } from "@react-oauth/google";
-import axios from "axios";
-import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { useAuthStore } from "@/stores/authStore";
 
 import { useCallback } from "react";
 
 export default function GoogleLoginButton({ mode = "signup", onClose }) {
-  const { login } = useAuth();
+  const login = useAuthStore((state) => state.login);
 
-  const handleSuccess = useCallback(async (credentialResponse) => {
-    try {
-      const res = await axios.post("http://localhost:5000/api/auth/google", {
-        token: credentialResponse.credential,
-      });
+  const handleSuccess = useCallback(
+    async (credentialResponse) => {
+      try {
+        const res = await api.post("/auth/google", {
+          token: credentialResponse.credential,
+        });
 
-      console.log("Google auth response:", res.data);
-      if (res.data.success) {
-        login(res.data.user, res.data.accessToken);
-        if (onClose) onClose();
-      } else {
-        console.warn("Login failed:", res.data);
+        console.log("Google auth response:", res.data);
+        if (res.data.success) {
+          login(res.data.user, res.data.accessToken);
+          if (onClose) onClose();
+        } else {
+          console.warn("Login failed:", res.data);
+        }
+      } catch (error) {
+        console.error("Google login error:", error.response?.data || error);
       }
-    } catch (error) {
-      console.error("Google login error:", error.response?.data || error);
-    }
-  }, [login, onClose]);
+    },
+    [login, onClose],
+  );
 
   const handleError = useCallback(() => {
     console.log("Login Failed");
