@@ -1,11 +1,12 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
 import { Bell, Edit, Search } from "lucide-react";
 import Link from "next/link";
 
 export default function AuthenticatedNavbar() {
-  const { user, logout } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   return (
     <header className="sticky top-0 z-50 h-[65px] border-b border-gray-100 bg-white px-4 sm:px-6 flex items-center justify-between">

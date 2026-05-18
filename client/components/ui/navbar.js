@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import AuthModal from "../auth/auth-modal";
-import { useAuth } from "@/context/AuthContext";
+import { useUIStore } from "@/stores/uiStore";
 
 const navLinks = [
   { label: "Features", href: "/" },
@@ -10,7 +10,13 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { isAuthModalOpen, closeAuthModal, authModalMode, setAuthModalMode, openAuthModal } = useAuth();
+  const {
+    isAuthModalOpen,
+    closeAuthModal,
+    authModalMode,
+    setAuthModalMode,
+    openAuthModal,
+  } = useUIStore();
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f2ede3]">

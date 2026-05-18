@@ -1,13 +1,15 @@
 import "./globals.css";
 
-import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/ui/footer";
-import { Providers } from "@/providers/Providers";
+import { AuthProviders } from "@/providers/AuthProvider";
 import MainLayout from "@/components/layout/MainLayout";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="scroll-smooth antialiased" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="scroll-smooth antialiased"
+      suppressHydrationWarning
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -22,11 +24,9 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className="h-screen overflow-hidden bg-[#F7F4ED] flex flex-col">
-        <Providers>
-          <MainLayout>
-            {children}
-          </MainLayout>
-        </Providers>
+        <AuthProviders>
+          <MainLayout>{children}</MainLayout>
+        </AuthProviders>
       </body>
     </html>
   );

@@ -1,16 +1,21 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import AuthenticatedNavbar from "@/components/dashboard/AuthenticatedNavbar";
 import Sidebar from "@/components/dashboard/Sidebar";
 
 export default function MainLayout({ children }) {
-  const { user, loading } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
 
   if (loading) {
-    return <div className="h-screen w-full flex items-center justify-center bg-white"><div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div></div>;
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   if (user) {
