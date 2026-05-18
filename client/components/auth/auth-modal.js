@@ -318,7 +318,7 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
         </div>
       )}
     </Modal>
-}
+)}
 
 function GoogleIcon() {
   return (
