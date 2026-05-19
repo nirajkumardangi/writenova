@@ -1,15 +1,15 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+import { OAuth2Client } from "google-auth-library";
 import env from "../config/env.js";
 import { redis } from "../config/redis.js";
-import { OAuth2Client } from "google-auth-library";
 
 import User from "../models/user.model.js";
 
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { generateOTP } from "../utils/otp.js";
 import sendMail from "../utils/sendMail.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 
 /* 
 =============================
@@ -283,30 +283,19 @@ export async function logout(req, res) {
     // get refresh token from cookie
     const refreshToken = req.cookies.refresh_token;
 
-    if (!refreshToken) {
-      return res.status(401).json({
-        message: "Refresh token not found",
-      });
+    if (refreshToken) {
+      try {
+        // verify refresh token to find user id
+        const decodedToken = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET);
+
+        // delete refresh token from redis
+        await redis.del(`refresh_token:${decodedToken.id}`);
+      } catch (err) {
+        // Ignore verify or redis errors during logout
+      }
     }
 
-    // verify refresh token
-    const decodedToken = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET);
-
-    // check redis
-    const storedRefreshToken = await redis.get(
-      `refresh_token:${decodedToken.id}`,
-    );
-
-    if (!storedRefreshToken || storedRefreshToken !== refreshToken) {
-      return res.status(401).json({
-        message: "Refresh token expired or invalid",
-      });
-    }
-
-    // delete refresh token from redis
-    await redis.del(`refresh_token:${decodedToken.id}`);
-
-    // clear refresh token cookie
+    // clear refresh token cookie unconditionally
     res.clearCookie("refresh_token");
 
     res.status(200).json({
@@ -314,8 +303,11 @@ export async function logout(req, res) {
       message: "Logout successful",
     });
   } catch (error) {
-    res.status(401).json({
-      message: "Invalid refresh token",
+    // Fallback: clear cookie and return 200 even if something else goes wrong
+    res.clearCookie("refresh_token");
+    res.status(200).json({
+      status: true,
+      message: "Logout completed with minor errors",
     });
   }
 }

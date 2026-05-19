@@ -5,9 +5,11 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 
 import { useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 export default function GoogleLoginButton({ mode = "signup", onClose }) {
   const login = useAuthStore((state) => state.login);
+  const router = useRouter();
 
   const handleSuccess = useCallback(
     async (credentialResponse) => {
@@ -20,6 +22,7 @@ export default function GoogleLoginButton({ mode = "signup", onClose }) {
         if (res.data.success) {
           login(res.data.user, res.data.accessToken);
           if (onClose) onClose();
+          router.push("/dashboard");
         } else {
           console.warn("Login failed:", res.data);
         }

@@ -1,7 +1,6 @@
 import "./globals.css";
 
 import { AuthProviders } from "@/providers/AuthProvider";
-import MainLayout from "@/components/layout/MainLayout";
 
 export default function RootLayout({ children }) {
   return (
@@ -23,10 +22,8 @@ export default function RootLayout({ children }) {
         />
       </head>
 
-      <body className="h-screen overflow-hidden bg-[#F7F4ED] flex flex-col">
-        <AuthProviders>
-          <MainLayout>{children}</MainLayout>
-        </AuthProviders>
+      <body className="h-screen bg-[#F7F4ED] text-[#171717]">
+        <AuthProviders>{children}</AuthProviders>
       </body>
     </html>
   );
