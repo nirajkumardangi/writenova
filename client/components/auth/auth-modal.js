@@ -87,13 +87,10 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
     try {
       setIsVerifying(true);
       setError("");
-      const res = await api.post(
-        "/auth/verify-otp",
-        {
-          email,
-          otp: otpString,
-        },
-      );
+      const res = await api.post("/auth/verify-otp", {
+        email,
+        otp: otpString,
+      });
       console.log("Login successful:", res.data);
       login(res.data.user, res.data.accessToken);
       handleClose(); // Close the modal upon success
@@ -133,9 +130,7 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
           </div>
 
           <p className="mt-8 text-[15px] text-gray-800">
-            {mode === "signup"
-              ? "Already have an account? "
-              : "No account? "}
+            {mode === "signup" ? "Already have an account? " : "No account? "}
             <button
               onClick={toggleMode}
               className="font-bold text-[#1a8917] cursor-pointer hover:text-[#105c0f] hover:underline"
@@ -206,9 +201,7 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
             </div>
 
             {error && (
-              <p className="text-red-500 text-sm mb-4 text-center">
-                {error}
-              </p>
+              <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
             )}
 
             <button
@@ -235,9 +228,7 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
           </button>
 
           <p className="text-[15px] text-gray-800">
-            {mode === "signup"
-              ? "Already have an account? "
-              : "No account? "}
+            {mode === "signup" ? "Already have an account? " : "No account? "}
             <button
               onClick={toggleMode}
               className="font-bold cursor-pointer text-[#1a8917] hover:text-[#105c0f] hover:underline"
@@ -269,8 +260,8 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
             Check your email inbox
           </h2>
           <p className="mb-10 text-center text-[15px] text-gray-800 leading-relaxed">
-            To sign {mode === "signup" ? "up" : "in"}, enter the code we
-            sent to:
+            To sign {mode === "signup" ? "up" : "in"}, enter the code we sent
+            to:
             <br />
             <strong>{email}</strong>
           </p>
@@ -296,9 +287,7 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
             </div>
 
             {error && (
-              <p className="text-red-500 text-sm mb-6 text-center">
-                {error}
-              </p>
+              <p className="text-red-500 text-sm mb-6 text-center">{error}</p>
             )}
 
             <button
@@ -321,7 +310,8 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
         </div>
       )}
     </Modal>
-)}
+  );
+}
 
 function GoogleIcon() {
   return (
