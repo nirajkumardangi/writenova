@@ -1,13 +1,16 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
-import { Mail, X } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
+import api from "@/lib/api";
+import { Mail } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import GoogleLoginButton from "./google-login-button";
+import Modal from "@/components/ui/modal";
 
 export default function AuthModal({ isOpen, onClose, mode, setMode }) {
-  const { login } = useAuth();
+  const login = useAuthStore((state) => state.login);
+  const router = useRouter();
   const [view, setView] = useState("options"); // "options" | "email" | "otp"
 
   const [name, setName] = useState("");
@@ -64,7 +67,7 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
     try {
       setLoading(true);
       setError("");
-      await axios.post("http://localhost:5000/api/auth/send-otp", { email });
+      await api.post("/auth/send-otp", { email });
       setView("otp");
       setOtp(["", "", "", "", "", ""]);
     } catch (err) {
@@ -84,16 +87,14 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
     try {
       setIsVerifying(true);
       setError("");
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/verify-otp",
-        {
-          email,
-          otp: otpString,
-        },
-      );
+      const res = await api.post("/auth/verify-otp", {
+        email,
+        otp: otpString,
+      });
       console.log("Login successful:", res.data);
       login(res.data.user, res.data.accessToken);
       handleClose(); // Close the modal upon success
+      router.push("/dashboard");
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -105,228 +106,210 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-white/95 sm:bg-[#F3F4F6]/80 sm:backdrop-blur-sm ${isOpen ? '' : 'hidden'}`}>
-      <div className="relative flex w-full max-w-[570px] flex-col items-center justify-center rounded bg-white p-10 shadow-2xl sm:p-14">
+    <Modal isOpen={isOpen} onClose={handleClose} className="p-10 sm:p-14">
+      {view === "options" && (
+        <div className="flex w-full max-w-[320px] flex-col items-center mt-2">
+          <h2 className="mb-12 font-serif text-[32px] sm:text-[40px] text-gray-900">
+            {mode === "signup" ? "Join WriteNova." : "Welcome back."}
+          </h2>
+
+          <div className="flex w-full flex-col gap-3">
+            <GoogleLoginButton mode={mode} onClose={handleClose} />
+
+            <button
+              onClick={() => setView("email")}
+              className="flex w-full items-center rounded-full border border-gray-400 bg-white px-4 py-2.5 transition-colors cursor-pointer hover:border-black"
+            >
+              <div className="flex w-6 justify-center">
+                <Mail className="h-[22px] w-[22px] text-gray-800 stroke-[1.5]" />
+              </div>
+              <span className="flex-1 text-center text-[15px] font-medium text-gray-800">
+                Sign {mode === "signup" ? "up" : "in"} with email
+              </span>
+            </button>
+          </div>
+
+          <p className="mt-8 text-[15px] text-gray-800">
+            {mode === "signup" ? "Already have an account? " : "No account? "}
+            <button
+              onClick={toggleMode}
+              className="font-bold text-[#1a8917] cursor-pointer hover:text-[#105c0f] hover:underline"
+            >
+              {mode === "signup" ? "Sign in" : "Create one"}
+            </button>
+          </p>
+
+          {mode === "signup" && (
+            <p className="mt-10 text-center text-[13px] text-gray-500 max-w-[480px]">
+              By clicking "Sign up", you accept WriteNova's{" "}
+              <a href="#" className="underline hover:text-gray-800">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="#" className="underline hover:text-gray-800">
+                Privacy Policy
+              </a>
+              .
+            </p>
+          )}
+        </div>
+      )}
+
+      {view === "email" && (
+        <div className="flex w-full max-w-[320px] flex-col items-center">
+          <Mail className="mb-6 h-[38px] w-[38px] text-gray-800 stroke-[1]" />
+          <h2 className="mb-10 text-center font-serif text-[32px] leading-[1.2] text-gray-900">
+            Sign {mode === "signup" ? "up" : "in"} with email
+          </h2>
+
+          <form className="w-full" onSubmit={handleSendOTP}>
+            {mode === "signup" && (
+              <div className="mb-5 w-full">
+                <label
+                  className="mb-1.5 block text-[13px] text-gray-800"
+                  htmlFor="name"
+                >
+                  Your full name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full rounded border border-transparent bg-gray-50 px-3 py-2 text-[15px] outline-none transition-colors hover:bg-gray-100 focus:border-black focus:bg-white"
+                />
+              </div>
+            )}
+
+            <div className="mb-8 w-full">
+              <label
+                className="mb-1.5 block text-[13px] text-gray-800"
+                htmlFor="email"
+              >
+                Your email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                className="w-full rounded border border-transparent bg-gray-50 px-3 py-2 text-[15px] outline-none transition-colors hover:bg-gray-100 focus:border-black focus:bg-white"
+                required
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mb-8 w-full rounded-full bg-black py-[10px] text-[15px] font-medium text-white transition-opacity cursor-pointer hover:bg-black/80 disabled:opacity-50"
+            >
+              {loading
+                ? "Sending OTP..."
+                : mode === "signup"
+                  ? "Create account"
+                  : "Sign in"}
+            </button>
+          </form>
+
           <button
-            onClick={handleClose}
-            className="absolute right-4 top-4 z-10 text-gray-400 transition-colors hover:text-gray-800 sm:right-6 sm:top-6 cursor-pointer"
-            aria-label="Close"
+            onClick={() => {
+              setView("options");
+              setError("");
+            }}
+            className="mb-8 text-[15px] font-medium text-gray-800 underline cursor-pointer hover:text-black"
           >
-            <X className="h-6 w-6 stroke-[1.5]" />
+            Back to sign {mode === "signup" ? "up" : "in"} options
           </button>
 
-          {view === "options" && (
-            <div className="flex w-full max-w-[320px] flex-col items-center mt-2">
-              <h2 className="mb-12 font-serif text-[32px] sm:text-[40px] text-gray-900">
-                {mode === "signup" ? "Join WriteNova." : "Welcome back."}
-              </h2>
+          <p className="text-[15px] text-gray-800">
+            {mode === "signup" ? "Already have an account? " : "No account? "}
+            <button
+              onClick={toggleMode}
+              className="font-bold cursor-pointer text-[#1a8917] hover:text-[#105c0f] hover:underline"
+            >
+              {mode === "signup" ? "Sign in" : "Create one"}
+            </button>
+          </p>
 
-              <div className="flex w-full flex-col gap-3">
-                <GoogleLoginButton mode={mode} onClose={handleClose} />
-
-                <button
-                  onClick={() => setView("email")}
-                  className="flex w-full items-center rounded-full border border-gray-400 bg-white px-4 py-2.5 transition-colors cursor-pointer hover:border-black"
-                >
-                  <div className="flex w-6 justify-center">
-                    <Mail className="h-[22px] w-[22px] text-gray-800 stroke-[1.5]" />
-                  </div>
-                  <span className="flex-1 text-center text-[15px] font-medium text-gray-800">
-                    Sign {mode === "signup" ? "up" : "in"} with email
-                  </span>
-                </button>
-              </div>
-
-              <p className="mt-8 text-[15px] text-gray-800">
-                {mode === "signup"
-                  ? "Already have an account? "
-                  : "No account? "}
-                <button
-                  onClick={toggleMode}
-                  className="font-bold text-[#1a8917] cursor-pointer hover:text-[#105c0f] hover:underline"
-                >
-                  {mode === "signup" ? "Sign in" : "Create one"}
-                </button>
-              </p>
-
-              {mode === "signup" && (
-                <p className="mt-10 text-center text-[13px] text-gray-500 max-w-[480px]">
-                  By clicking "Sign up", you accept WriteNova's{" "}
-                  <a href="#" className="underline hover:text-gray-800">
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a href="#" className="underline hover:text-gray-800">
-                    Privacy Policy
-                  </a>
-                  .
-                </p>
-              )}
-            </div>
+          {mode === "signup" && (
+            <p className="mt-12 text-center text-[13px] text-gray-500 max-w-[480px]">
+              By clicking "Create Account", you accept WriteNova's{" "}
+              <a href="#" className="underline hover:text-gray-800">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="#" className="underline hover:text-gray-800">
+                Privacy Policy
+              </a>
+              .
+            </p>
           )}
+        </div>
+      )}
 
-          {view === "email" && (
-            <div className="flex w-full max-w-[320px] flex-col items-center">
-              <Mail className="mb-6 h-[38px] w-[38px] text-gray-800 stroke-[1]" />
-              <h2 className="mb-10 text-center font-serif text-[32px] leading-[1.2] text-gray-900">
-                Sign {mode === "signup" ? "up" : "in"} with email
-              </h2>
+      {view === "otp" && (
+        <div className="flex w-full max-w-[420px] flex-col items-center">
+          <Mail className="mb-6 h-[48px] w-[48px] text-gray-800 stroke-[1]" />
+          <h2 className="mb-6 text-center font-serif text-[32px] sm:text-[36px] leading-[1.2] text-gray-900">
+            Check your email inbox
+          </h2>
+          <p className="mb-10 text-center text-[15px] text-gray-800 leading-relaxed">
+            To sign {mode === "signup" ? "up" : "in"}, enter the code we sent
+            to:
+            <br />
+            <strong>{email}</strong>
+          </p>
 
-              <form className="w-full" onSubmit={handleSendOTP}>
-                {mode === "signup" && (
-                  <div className="mb-5 w-full">
-                    <label
-                      className="mb-1.5 block text-[13px] text-gray-800"
-                      htmlFor="name"
-                    >
-                      Your full name
-                    </label>
-                    <input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Enter your full name"
-                      className="w-full rounded border border-transparent bg-gray-50 px-3 py-2 text-[15px] outline-none transition-colors hover:bg-gray-100 focus:border-black focus:bg-white"
-                    />
-                  </div>
-                )}
-
-                <div className="mb-8 w-full">
-                  <label
-                    className="mb-1.5 block text-[13px] text-gray-800"
-                    htmlFor="email"
-                  >
-                    Your email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email address"
-                    className="w-full rounded border border-transparent bg-gray-50 px-3 py-2 text-[15px] outline-none transition-colors hover:bg-gray-100 focus:border-black focus:bg-white"
-                    required
-                  />
-                </div>
-
-                {error && (
-                  <p className="text-red-500 text-sm mb-4 text-center">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="mb-8 w-full rounded-full bg-black py-[10px] text-[15px] font-medium text-white transition-opacity cursor-pointer hover:bg-black/80 disabled:opacity-50"
-                >
-                  {loading
-                    ? "Sending OTP..."
-                    : mode === "signup"
-                      ? "Create account"
-                      : "Sign in"}
-                </button>
-              </form>
-
-              <button
-                onClick={() => {
-                  setView("options");
-                  setError("");
-                }}
-                className="mb-8 text-[15px] font-medium text-gray-800 underline cursor-pointer hover:text-black"
-              >
-                Back to sign {mode === "signup" ? "up" : "in"} options
-              </button>
-
-              <p className="text-[15px] text-gray-800">
-                {mode === "signup"
-                  ? "Already have an account? "
-                  : "No account? "}
-                <button
-                  onClick={toggleMode}
-                  className="font-bold cursor-pointer text-[#1a8917] hover:text-[#105c0f] hover:underline"
-                >
-                  {mode === "signup" ? "Sign in" : "Create one"}
-                </button>
-              </p>
-
-              {mode === "signup" && (
-                <p className="mt-12 text-center text-[13px] text-gray-500 max-w-[480px]">
-                  By clicking "Create Account", you accept WriteNova's{" "}
-                  <a href="#" className="underline hover:text-gray-800">
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a href="#" className="underline hover:text-gray-800">
-                    Privacy Policy
-                  </a>
-                  .
-                </p>
-              )}
+          <form
+            className="w-full flex flex-col items-center"
+            onSubmit={handleVerifyOTP}
+          >
+            <div className="mb-10 flex w-full justify-between gap-2 sm:gap-3 px-2 sm:px-6">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  id={`otp-${index}`}
+                  type="text"
+                  inputMode="numeric"
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  className="h-12 w-10 sm:h-14 sm:w-12 rounded-lg border border-gray-300 bg-gray-50 text-center text-xl sm:text-2xl outline-none transition-all focus:border-black focus:bg-white"
+                  maxLength={1}
+                />
+              ))}
             </div>
-          )}
 
-          {view === "otp" && (
-            <div className="flex w-full max-w-[420px] flex-col items-center">
-              <Mail className="mb-6 h-[48px] w-[48px] text-gray-800 stroke-[1]" />
-              <h2 className="mb-6 text-center font-serif text-[32px] sm:text-[36px] leading-[1.2] text-gray-900">
-                Check your email inbox
-              </h2>
-              <p className="mb-10 text-center text-[15px] text-gray-800 leading-relaxed">
-                To sign {mode === "signup" ? "up" : "in"}, enter the code we
-                sent to:
-                <br />
-                <strong>{email}</strong>
-              </p>
+            {error && (
+              <p className="text-red-500 text-sm mb-6 text-center">{error}</p>
+            )}
 
-              <form
-                className="w-full flex flex-col items-center"
-                onSubmit={handleVerifyOTP}
-              >
-                <div className="mb-10 flex w-full justify-between gap-2 sm:gap-3 px-2 sm:px-6">
-                  {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      id={`otp-${index}`}
-                      type="text"
-                      inputMode="numeric"
-                      value={digit}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="h-12 w-10 sm:h-14 sm:w-12 rounded-lg border border-gray-300 bg-gray-50 text-center text-xl sm:text-2xl outline-none transition-all focus:border-black focus:bg-white"
-                      maxLength={1}
-                    />
-                  ))}
-                </div>
+            <button
+              type="submit"
+              disabled={isVerifying || otp.join("").length !== 6 || loading}
+              className="mb-8 rounded-full bg-black px-10 py-[10px] text-[15px] font-medium text-white transition-opacity cursor-pointer hover:bg-black/80 disabled:bg-[#E5E5E5] disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-[#E5E5E5]"
+            >
+              {isVerifying ? "Verifying..." : "Submit"}
+            </button>
+          </form>
 
-                {error && (
-                  <p className="text-red-500 text-sm mb-6 text-center">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isVerifying || otp.join("").length !== 6 || loading}
-                  className="mb-8 rounded-full bg-black px-10 py-[10px] text-[15px] font-medium text-white transition-opacity cursor-pointer hover:bg-black/80 disabled:bg-[#E5E5E5] disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-[#E5E5E5]"
-                >
-                  {isVerifying ? "Verifying..." : "Submit"}
-                </button>
-              </form>
-
-              <button
-                type="button"
-                onClick={handleSendOTP}
-                disabled={loading}
-                className="text-[15px] font-medium text-gray-800 underline cursor-pointer hover:text-black disabled:opacity-50"
-              >
-                Resend code
-              </button>
-            </div>
-          )}
-      </div>
-    </div>
+          <button
+            type="button"
+            onClick={handleSendOTP}
+            disabled={loading}
+            className="text-[15px] font-medium text-gray-800 underline cursor-pointer hover:text-black disabled:opacity-50"
+          >
+            Resend code
+          </button>
+        </div>
+      )}
+    </Modal>
   );
 }
 

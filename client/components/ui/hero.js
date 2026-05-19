@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useUIStore } from "@/stores/uiStore";
 
 const prompts = [
   "Write a blog about 10 best AI tools for coding...",
@@ -13,7 +13,7 @@ const prompts = [
 ];
 
 export default function Hero() {
-  const { openAuthModal } = useAuth();
+  const openAuthModal = useUIStore((state) => state.openAuthModal);
   const [text, setText] = useState("");
   const [index, setIndex] = useState(0);
 
@@ -67,7 +67,7 @@ export default function Hero() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <button 
+          <button
             onClick={() => openAuthModal("signup")}
             className="w-full sm:w-auto px-10 py-4 bg-neutral-900 text-white rounded-full font-medium hover:bg-black transition-all shadow-lg active:scale-95 cursor-pointer"
           >
