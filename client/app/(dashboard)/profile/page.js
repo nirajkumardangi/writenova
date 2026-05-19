@@ -25,9 +25,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        {user?.profilePicture ? (
+        {user?.avatar ? (
           <img
-            src={user.profilePicture}
+            src={user.avatar}
             alt="Profile Picture"
             className="h-20 w-20 rounded-full object-cover border-2 border-gray-100"
           />

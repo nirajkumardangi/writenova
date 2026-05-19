@@ -18,7 +18,6 @@ export default function GoogleLoginButton({ mode = "signup", onClose }) {
           token: credentialResponse.credential,
         });
 
-        console.log("Google auth response:", res.data);
         if (res.data.success) {
           login(res.data.user, res.data.accessToken);
           if (onClose) onClose();

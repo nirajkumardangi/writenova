@@ -11,6 +11,13 @@ import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { generateOTP } from "../utils/otp.js";
 import sendMail from "../utils/sendMail.js";
 
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 /* 
 =============================
 SEND OTP
@@ -126,12 +133,7 @@ export async function verifyOTP(req, res) {
     });
 
     // secure cookie
-    res.cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("refresh_token", refreshToken, refreshCookieOptions);
 
     // send token to client
     res.status(200).json({
@@ -253,12 +255,7 @@ export const googleLogin = async (req, res) => {
     });
 
     // secure cookie
-    res.cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("refresh_token", refreshToken, refreshCookieOptions);
 
     res.status(200).json({
       success: true,
@@ -296,7 +293,7 @@ export async function logout(req, res) {
     }
 
     // clear refresh token cookie unconditionally
-    res.clearCookie("refresh_token");
+    res.clearCookie("refresh_token", refreshCookieOptions);
 
     res.status(200).json({
       status: true,
@@ -304,7 +301,7 @@ export async function logout(req, res) {
     });
   } catch (error) {
     // Fallback: clear cookie and return 200 even if something else goes wrong
-    res.clearCookie("refresh_token");
+    res.clearCookie("refresh_token", refreshCookieOptions);
     res.status(200).json({
       status: true,
       message: "Logout completed with minor errors",

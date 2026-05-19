@@ -91,7 +91,6 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
         email,
         otp: otpString,
       });
-      console.log("Login successful:", res.data);
       login(res.data.user, res.data.accessToken);
       handleClose(); // Close the modal upon success
       router.push("/dashboard");

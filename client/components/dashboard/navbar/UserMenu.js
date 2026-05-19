@@ -1,7 +1,7 @@
-// components/navbar/UserMenu.jsx ← CLIENT
 "use client";
 
 import { useAuthStore } from "@/stores/authStore";
+import Image from "next/image";
 
 export default function UserMenu() {
   const user = useAuthStore((state) => state.user);
@@ -9,9 +9,9 @@ export default function UserMenu() {
 
   return (
     <div className="relative cursor-pointer group">
-      {user?.profilePicture ? (
+      {user?.avatar ? (
         <img
-          src={user.profilePicture}
+          src={user.avatar}
           alt="Profile"
           className="h-8 w-8 rounded-full object-cover"
         />

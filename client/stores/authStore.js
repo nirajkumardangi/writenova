@@ -16,7 +16,6 @@ export const useAuthStore = create((set, get) => ({
       // We expect the backend to return the user.
       set({ user: res.data.user, loading: false });
     } catch (error) {
-      console.log("Not authenticated or no valid session");
       set({ user: null, accessToken: null, loading: false });
     }
   },
