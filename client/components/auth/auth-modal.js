@@ -4,11 +4,13 @@ import { useAuthStore } from "@/stores/authStore";
 import api from "@/lib/api";
 import { Mail } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import GoogleLoginButton from "./google-login-button";
 import Modal from "@/components/ui/modal";
 
 export default function AuthModal({ isOpen, onClose, mode, setMode }) {
   const login = useAuthStore((state) => state.login);
+  const router = useRouter();
   const [view, setView] = useState("options"); // "options" | "email" | "otp"
 
   const [name, setName] = useState("");
@@ -95,6 +97,7 @@ export default function AuthModal({ isOpen, onClose, mode, setMode }) {
       console.log("Login successful:", res.data);
       login(res.data.user, res.data.accessToken);
       handleClose(); // Close the modal upon success
+      router.push("/dashboard");
     } catch (err) {
       setError(
         err.response?.data?.message ||
