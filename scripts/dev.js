@@ -1,6 +1,6 @@
 const { spawn } = require("node:child_process");
 
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 const commands = [
   { name: "server", args: ["run", "dev:server"] },
@@ -8,7 +8,7 @@ const commands = [
 ];
 
 const children = commands.map(({ name, args }) => {
-  const child = spawn(`${npmCommand} ${args.join(" ")}`, {
+  const child = spawn(`${pnpmCommand} ${args.join(" ")}`, {
     cwd: process.cwd(),
     env: process.env,
     shell: true,
