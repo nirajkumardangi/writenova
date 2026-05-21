@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Check } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const ALL_TOPICS = [
   "Data Science",
@@ -44,6 +45,11 @@ const INITIAL_RECOMMENDED_USERS = [
 ];
 
 export default function SidebarRight() {
+  const pathname = usePathname();
+  const isDashboard = pathname === "/dashboard";
+
+  if (!isDashboard) return null;
+
   const [showPromo, setShowPromo] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [expandedTopics, setExpandedTopics] = useState(false);
