@@ -7,3 +7,8 @@ export async function loginWithEmail(email) {
 export async function verifyOtp(email, otp) {
   return api.post("/auth/verify-otp", { email, otp });
 }
+
+export async function loginWithGoogle(code, redirectUri) {
+  return api.post("/auth/google", { code, redirectUri });
+}
+
