@@ -1,12 +1,12 @@
 "use client";
 
-import { useAuthStore } from "@/features/auth/store";
+import { useCurrentUser } from "@/features/auth/hooks";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function DashboardAuthGuard({ children }) {
-  const user = useAuthStore((state) => state.user);
-  const loading = useAuthStore((state) => state.loading);
+  const { user } = useCurrentUser();
+  const { loading } = useCurrentUser();
   const router = useRouter();
 
   useEffect(() => {

@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuthStore } from "@/features/auth/store";
+import { useCurrentUser } from "@/features/auth/hooks";
 import { Calendar, Mail, Settings, User } from "lucide-react";
 
 export default function ProfilePage() {
-  const user = useAuthStore((state) => state.user);
+  const { user } = useCurrentUser();
 
   return (
     <div className="mx-auto max-w-3xl py-8 px-4 sm:px-6">

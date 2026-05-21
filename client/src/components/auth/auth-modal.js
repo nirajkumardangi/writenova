@@ -1,15 +1,16 @@
 "use client";
 
 import Modal from "@/components/ui/modal";
-import { useAuthStore } from "@/features/auth/store";
 import api from "@/lib/api";
 import { Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import GoogleLoginButton from "./google-login-button";
+import { useCurrentUser } from "@/features/auth/hooks";
 
 export default function AuthModal({ isOpen, onClose, mode, setMode }) {
-  const login = useAuthStore((state) => state.login);
+  const { login } = useCurrentUser();
+
   const router = useRouter();
   const [view, setView] = useState("options"); // "options" | "email" | "otp"
 

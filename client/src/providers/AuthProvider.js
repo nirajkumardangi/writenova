@@ -1,11 +1,11 @@
 "use client";
 
-import { useAuthStore } from "@/features/auth/store";
+import { useCurrentUser } from "@/features/auth/hooks";
 import { useEffect } from "react";
 
 export function AuthProviders({ children }) {
-  const checkAuth = useAuthStore((state) => state.checkAuth);
-  const loading = useAuthStore((state) => state.loading);
+  const { checkAuth } = useCurrentUser();
+  const { loading } = useCurrentUser();
 
   useEffect(() => {
     checkAuth();

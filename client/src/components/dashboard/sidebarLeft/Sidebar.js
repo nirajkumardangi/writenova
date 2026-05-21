@@ -12,7 +12,7 @@ const sidebarLinks = [
   { name: "Settings", href: "/settings", icon: User },
 ];
 
-export default function Sidebar() {
+export default function SidebarLeft() {
   return (
     <>
       {/* ── Desktop Sidebar ── */}

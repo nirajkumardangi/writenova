@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuthStore } from "@/features/auth/store";
+import { useCurrentUser } from "@/features/auth/hooks";
 
 export default function UserMenu() {
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+  const { user } = useCurrentUser();
+  const { logout } = useCurrentUser();
 
   return (
     <div className="relative cursor-pointer group">
