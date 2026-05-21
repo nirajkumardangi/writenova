@@ -8,16 +8,12 @@ export default function UserMenu() {
 
   return (
     <div className="relative cursor-pointer group">
-      {user?.avatar ? (
+      {user?.avatar && (
         <img
           src={user.avatar}
           alt="Profile"
           className="h-8 w-8 rounded-full object-cover"
         />
-      ) : (
-        <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-green-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
-          {user?.username?.charAt(0)?.toUpperCase() || "U"}
-        </div>
       )}
 
       {/* Dropdown */}
