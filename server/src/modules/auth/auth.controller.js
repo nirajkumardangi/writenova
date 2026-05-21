@@ -18,11 +18,12 @@ const refreshCookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-/* 
-=============================
-SEND OTP
-=============================
-*/
+/**
+ *
+ * @description Send OTP to email for login or registration
+ * @route POST /api/auth/send-otp
+ * @access Public
+ */
 
 export async function sendOTP(req, res, next) {
   try {
@@ -70,11 +71,12 @@ export async function sendOTP(req, res, next) {
   }
 }
 
-/* 
-=============================
-VERIFY OTP
-=============================
-*/
+/**
+ *
+ * @description Verify OTP and login or create user
+ * @route POST /api/auth/verify-otp
+ * @access Public
+ */
 
 export async function verifyOTP(req, res, next) {
   try {
@@ -145,11 +147,12 @@ export async function verifyOTP(req, res, next) {
   }
 }
 
-/* 
-=============================
-REFRESH TOKEN
-=============================
-*/
+/**
+ *
+ * @description Refresh access token using refresh token
+ * @route POST /api/auth/refresh-token
+ * @access Public
+ */
 
 export async function refreshToken(req, res, next) {
   try {
@@ -189,11 +192,12 @@ export async function refreshToken(req, res, next) {
   }
 }
 
-/* 
-=============================
-LOGIN WITH GOOGLE
-=============================
-*/
+/**
+ *
+ * @description Google login using OAuth2
+ * @route POST /api/auth/google
+ * @access Public
+ */
 
 export const googleLogin = async (req, res, next) => {
   try {
@@ -275,11 +279,12 @@ export const googleLogin = async (req, res, next) => {
   }
 };
 
-/* 
-=============================
-LOGOUT
-=============================
-*/
+/**
+ *
+ * @description Logout user by deleting refresh token and clearing cookie
+ * @route POST /api/auth/logout
+ * @access Private
+ */
 
 export async function logout(req, res, next) {
   try {
@@ -310,4 +315,18 @@ export async function logout(req, res, next) {
     res.clearCookie("refresh_token", refreshCookieOptions);
     next(error);
   }
+}
+
+/**
+ *
+ * @description Get current logged in user info
+ * @route GET /api/auth/me
+ * @access Private
+ */
+
+export async function getUser(req, res) {
+  res.json({
+    success: true,
+    user: req.user,
+  });
 }
