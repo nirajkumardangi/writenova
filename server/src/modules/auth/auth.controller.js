@@ -24,7 +24,7 @@ SEND OTP
 =============================
 */
 
-export async function sendOTP(req, res) {
+export async function sendOTP(req, res, next) {
   try {
     // check email
     const { email } = req.body;
@@ -66,9 +66,7 @@ export async function sendOTP(req, res) {
       message: "OTP send successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    next(error);
   }
 }
 
@@ -78,7 +76,7 @@ VERIFY OTP
 =============================
 */
 
-export async function verifyOTP(req, res) {
+export async function verifyOTP(req, res, next) {
   try {
     // verify email and otp
     const { email, otp } = req.body;
@@ -143,9 +141,7 @@ export async function verifyOTP(req, res) {
       accessToken,
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    next(error);
   }
 }
 
@@ -155,7 +151,7 @@ REFRESH TOKEN
 =============================
 */
 
-export async function refreshToken(req, res) {
+export async function refreshToken(req, res, next) {
   try {
     // get refresh token from cookie
     const refreshToken = req.cookies.refresh_token;
@@ -189,9 +185,7 @@ export async function refreshToken(req, res) {
       newAccessToken,
     });
   } catch (error) {
-    res.status(401).json({
-      message: "Invalid refresh token",
-    });
+    next(error);
   }
 }
 
@@ -201,7 +195,7 @@ LOGIN WITH GOOGLE
 =============================
 */
 
-export const googleLogin = async (req, res) => {
+export const googleLogin = async (req, res, next) => {
   try {
     const { code, redirectUri } = req.body;
 
@@ -214,7 +208,7 @@ export const googleLogin = async (req, res) => {
     const oAuth2Client = new OAuth2Client(
       env.GOOGLE_CLIENT_ID,
       env.GOOGLE_CLIENT_SECRET,
-      redirectUri
+      redirectUri,
     );
 
     // Exchange code for tokens
@@ -250,7 +244,7 @@ export const googleLogin = async (req, res) => {
 
     // create user
     if (!user) {
-      const username = email.split("@")[0] + Math.floor(Math.random() * 1000);
+      const username = email.split("@")[0];
 
       user = await User.create({
         email,
@@ -277,9 +271,7 @@ export const googleLogin = async (req, res) => {
       accessToken,
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -289,7 +281,7 @@ LOGOUT
 =============================
 */
 
-export async function logout(req, res) {
+export async function logout(req, res, next) {
   try {
     // get refresh token from cookie
     const refreshToken = req.cookies.refresh_token;
@@ -316,9 +308,6 @@ export async function logout(req, res) {
   } catch (error) {
     // Fallback: clear cookie and return 200 even if something else goes wrong
     res.clearCookie("refresh_token", refreshCookieOptions);
-    res.status(200).json({
-      status: true,
-      message: "Logout completed with minor errors",
-    });
+    next(error);
   }
 }
