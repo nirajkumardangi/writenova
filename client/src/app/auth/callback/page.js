@@ -9,7 +9,7 @@ function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useCurrentUser();
-  [error, setError] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let active = true;

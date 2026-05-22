@@ -1,0 +1,415 @@
+/* Tiptap Editor Custom Premium Styles */
+
+.tiptap {
+  outline: none;
+  min-height: 400px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #1f2937;
+  padding: 1.5rem 0;
+}
+
+/* Dark Mode support inside .dark container */
+.dark-theme .tiptap {
+  color: #f3f4f6;
+  background-color: #0c0a09;
+}
+
+/* Headings (Serif for Premium Look) */
+.tiptap h1,
+.tiptap h2,
+.tiptap h3,
+.tiptap h4 {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dark-theme .tiptap h1,
+.dark-theme .tiptap h2,
+.dark-theme .tiptap h3,
+.dark-theme .tiptap h4 {
+  color: #ffffff;
+}
+
+.tiptap h1 {
+  font-size: 2.25rem;
+  margin-top: 0;
+}
+
+.tiptap h2 {
+  font-size: 1.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 0.5rem;
+}
+
+.dark-theme .tiptap h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.tiptap h3 {
+  font-size: 1.4rem;
+}
+
+.tiptap h4 {
+  font-size: 1.2rem;
+}
+
+/* Paragraphs */
+.tiptap p {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+/* Strong / Bold */
+.tiptap strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.dark-theme .tiptap strong {
+  color: #ffffff;
+}
+
+/* Em / Italic */
+.tiptap em {
+  font-style: italic;
+}
+
+/* Links */
+.tiptap a {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+  cursor: pointer;
+}
+
+.tiptap a:hover {
+  color: #1d4ed8;
+}
+
+.dark-theme .tiptap a {
+  color: #60a5fa;
+}
+
+.dark-theme .tiptap a:hover {
+  color: #93c5fd;
+}
+
+/* Lists */
+.tiptap ul,
+.tiptap ol {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.tiptap ul {
+  list-style-type: disc;
+}
+
+.tiptap ol {
+  list-style-type: decimal;
+}
+
+.tiptap li {
+  margin-bottom: 0.5rem;
+}
+
+.tiptap li p {
+  margin: 0;
+}
+
+/* Blockquotes */
+.tiptap blockquote {
+  border-left: 4px solid #111827;
+  padding-left: 1.25rem;
+  font-style: italic;
+  color: #4b5563;
+  margin: 1.5rem 0;
+  background-color: #f9fafb;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.dark-theme .tiptap blockquote {
+  border-left-color: #f3f4f6;
+  color: #9ca3af;
+  background-color: #1c1917;
+}
+
+/* Code Blocks & Inline Code */
+.tiptap code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9em;
+  background-color: #f3f4f6;
+  color: #ef4444;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.dark-theme .tiptap code {
+  background-color: #292524;
+  color: #f87171;
+}
+
+.tiptap pre {
+  background: #f8f9fa !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #24292e !important;
+  font-family: 'Fira Code', 'Cascadia Code', Consolas, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  margin: 1.75rem 0;
+  overflow-x: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.tiptap pre code {
+  background: transparent !important;
+  color: #24292e !important;
+  padding: 0;
+  font-size: 0.875rem;
+  border-radius: 0;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* VS Code Light Syntax Highlighting */
+.tiptap pre .hljs-keyword,
+.tiptap pre .hljs-literal,
+.tiptap pre .hljs-symbol,
+.tiptap pre .hljs-name {
+  color: #0000ff !important; /* Blue keywords */
+}
+
+.tiptap pre .hljs-link {
+  color: #0000ff !important;
+  text-decoration: underline;
+}
+
+.tiptap pre .hljs-built_in,
+.tiptap pre .hljs-type {
+  color: #267f99 !important; /* Blue-green built-ins */
+}
+
+.tiptap pre .hljs-number,
+.tiptap pre .hljs-class {
+  color: #098658 !important; /* Green numbers */
+}
+
+.tiptap pre .hljs-string,
+.tiptap pre .hljs-meta .hljs-string {
+  color: #a31515 !important; /* Red strings */
+}
+
+.tiptap pre .hljs-regexp,
+.tiptap pre .hljs-template-tag {
+  color: #811f3f !important;
+}
+
+.tiptap pre .hljs-subst,
+.tiptap pre .hljs-function,
+.tiptap pre .hljs-title,
+.tiptap pre .hljs-params,
+.tiptap pre .hljs-formula {
+  color: #24292e !important;
+}
+
+.tiptap pre .hljs-comment,
+.tiptap pre .hljs-quote {
+  color: #008000 !important; /* Green comments */
+  font-style: italic;
+}
+
+.tiptap pre .hljs-doctag {
+  color: #608b4e !important;
+}
+
+.tiptap pre .hljs-meta,
+.tiptap pre .hljs-meta .hljs-keyword {
+  color: #303030 !important;
+}
+
+.tiptap pre .hljs-type,
+.tiptap pre .hljs-tag,
+.tiptap pre .hljs-attr,
+.tiptap pre .hljs-attribute {
+  color: #800000 !important; /* Red tags & attributes */
+}
+
+.tiptap pre .hljs-variable,
+.tiptap pre .hljs-template-variable {
+  color: #001080 !important; /* Blue variables */
+}
+
+.tiptap pre .hljs-bullet {
+  color: #0451a5 !important;
+}
+
+.tiptap pre .hljs-selector-class {
+  color: #267f99 !important;
+}
+
+.tiptap pre .hljs-selector-id {
+  color: #800000 !important;
+}
+
+.tiptap pre .hljs-selector-tag {
+  color: #0000ff !important;
+}
+
+.tiptap pre .hljs-selector-attr {
+  color: #800000 !important;
+}
+
+.tiptap pre .hljs-selector-pseudo {
+  color: #ff0000 !important;
+}
+
+/* Highlights */
+.tiptap mark {
+  background-color: #fef08a; /* soft yellow */
+  color: inherit;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.dark-theme .tiptap mark {
+  background-color: #ca8a04; /* darker yellow for dark mode contrast */
+  color: #ffffff;
+}
+
+/* Placeholder (when editor is empty) */
+.tiptap p.is-empty::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.dark-theme .tiptap p.is-empty::before {
+  color: #57534e;
+}
+
+/* Embedded Images */
+.tiptap img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  margin: 2rem auto;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  outline: 3px solid #6366f1;
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.3), 0 4px 20px -2px rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .tiptap img.ProseMirror-selectednode {
+  outline: 3px solid #818cf8;
+  box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.3), 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom Interactive Code Block NodeView inside editor */
+.editor-code-block-container {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  margin: 1.75rem 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  background: #f8f9fa !important;
+}
+
+.editor-code-block-container pre {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.editor-code-block-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.625rem 1rem !important;
+  background-color: #f1f5f9 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  user-select: none !important;
+}
+
+.editor-code-block-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+}
+
+.editor-code-block-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.editor-code-block-select {
+  font-family: inherit !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.25rem 0.5rem !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.editor-code-block-select:hover {
+  border-color: #94a3b8 !important;
+  color: #1e293b !important;
+}
+
+.editor-code-block-copy-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.25rem 0.5rem !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.editor-code-block-copy-btn:hover {
+  border-color: #94a3b8 !important;
+  color: #1e293b !important;
+  background-color: #f8fafc !important;
+}
+
+.editor-code-block-copy-btn.copied {
+  border-color: #bbf7d0 !important;
+  background-color: #f0fdf4 !important;
+  color: #166534 !important;
+}

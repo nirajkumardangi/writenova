@@ -19,7 +19,7 @@ export default function AuthenticatedNavbar() {
 
       <div className="flex items-center gap-4 sm:gap-6">
         <Link
-          href="/new-story"
+          href="/editor/new"
           className="hidden sm:flex items-center gap-2 text-gray-500 hover:text-black transition-colors"
         >
           <Edit className="h-5 w-5 stroke-[1.5]" />

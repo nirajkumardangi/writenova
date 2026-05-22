@@ -52,23 +52,31 @@ export async function generateArticleController(req, res, next) {
       res.write(chunkText);
     }
 
-    // 6. Tell the client we are done streaming data
+    // 6. Save to DB before closing the connection so we can return the ID
+    let articleId = "";
+    try {
+      const article = await AiArticle.create({
+        title: topic,
+        content: fullText,
+        author: userId,
+        aiGenerated: true,
+        status: "draft",
+        generationMeta: { tone, length, category },
+      });
+      articleId = article._id;
+    } catch (dbError) {
+      console.error("Database Save Error during stream completion:", dbError);
+    }
+
+    // 7. Write metadata delimiter and ID to the client
+    if (articleId) {
+      res.write(`\n__METADATA__:${articleId}`);
+    }
+
+    // 8. Tell the client we are done streaming data
     res.end();
 
-    // 7. Fire-and-forget: Save to DB in the background
-    // We execute this asynchronously so the user doesn't wait on MongoDB writes
-    AiArticle.create({
-      title: topic,
-      content: fullText,
-      author: userId,
-      aiGenerated: true,
-      status: "draft",
-      generationMeta: { tone, length, category },
-    }).catch((dbError) => {
-      console.error("Background Database Save Error:", dbError);
-    });
-
-    // 8. Safely activate the 1-minute cooldown now that all processing is done
+    // 9. Safely activate the 1-minute cooldown now that all processing is done
     await redis.set(cooldownKey, "1", { EX: 60 });
   } catch (error) {
     console.error("Error generating article stream:", error);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Plus, Check } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import api from "@/lib/api";
 
 const ALL_TOPICS = [
   "Data Science",
@@ -55,6 +56,20 @@ export default function SidebarRight() {
   const [expandedTopics, setExpandedTopics] = useState(false);
   const [activeTopics, setActiveTopics] = useState([]);
   const [followedUsers, setFollowedUsers] = useState({});
+  const [recommendedUsers, setRecommendedUsers] = useState([]);
+
+  const getAuthorBg = (authorId) => {
+    const gradients = [
+      "from-emerald-400 to-teal-600 text-white",
+      "from-indigo-500 to-purple-600 text-white",
+      "from-pink-400 to-rose-500 text-white",
+      "from-blue-400 to-indigo-600 text-white",
+      "from-amber-400 to-orange-500 text-white",
+    ];
+    if (!authorId) return gradients[0];
+    const code = authorId.toString().split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return `bg-gradient-to-br ${gradients[code % gradients.length]}`;
+  };
 
   // Safe client-side check to prevent hydration mismatch
   useEffect(() => {
@@ -64,6 +79,37 @@ export default function SidebarRight() {
       setShowPromo(false);
     }
   }, []);
+
+  useEffect(() => {
+    const fetchRecommended = async () => {
+      try {
+        const res = await api.get("/users/recommended");
+        if (res.data.success && res.data.users?.length > 0) {
+          const formatted = res.data.users.map((u) => {
+            const name = u.username || u.email?.split("@")[0] || "Anonymous";
+            return {
+              id: u._id,
+              username: u.username,
+              name,
+              bio: `Writer on WriteNova. Sharing ideas and insights.`,
+              initials: name.substring(0, 2).toUpperCase(),
+              bg: getAuthorBg(u._id),
+            };
+          });
+          setRecommendedUsers(formatted);
+        } else {
+          setRecommendedUsers(INITIAL_RECOMMENDED_USERS);
+        }
+      } catch (err) {
+        console.error("Failed to fetch recommended users:", err);
+        setRecommendedUsers(INITIAL_RECOMMENDED_USERS);
+      }
+    };
+
+    if (isDashboard) {
+      fetchRecommended();
+    }
+  }, [isDashboard]);
 
   const handleDismissPromo = () => {
     setShowPromo(false);
@@ -198,7 +244,7 @@ export default function SidebarRight() {
           </h3>
 
           <div className="flex flex-col gap-4">
-            {INITIAL_RECOMMENDED_USERS.map((user) => {
+            {recommendedUsers.map((user) => {
               const isFollowed = !!followedUsers[user.id];
               return (
                 <div
@@ -206,7 +252,7 @@ export default function SidebarRight() {
                   className="flex items-start justify-between gap-3 group"
                 >
                   {/* User Info Column */}
-                  <div className="flex gap-3">
+                  <Link href={`/${user.username || 'user'}`} className="flex gap-3 flex-1 min-w-0">
                     {/* Avatar */}
                     <div
                       className={`h-[40px] w-[40px] rounded-full flex-shrink-0 flex items-center justify-center font-bold text-[14px] shadow-sm tracking-wide ${user.bg} group-hover:scale-105 transition-transform duration-200`}
@@ -215,15 +261,15 @@ export default function SidebarRight() {
                     </div>
 
                     {/* Text details */}
-                    <div className="flex flex-col">
-                      <span className="text-[14px] font-bold text-gray-950 hover:underline cursor-pointer">
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-[14px] font-bold text-gray-950 hover:underline cursor-pointer truncate">
                         {user.name}
                       </span>
-                      <p className="text-[12px] text-gray-500 leading-[1.3] mt-0.5 line-clamp-2 max-w-[200px]">
+                      <p className="text-[12px] text-gray-500 leading-[1.3] mt-0.5 line-clamp-2">
                         {user.bio}
                       </p>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Follow Button */}
                   <button

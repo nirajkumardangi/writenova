@@ -1,18 +1,23 @@
 "use client";
 
-import { Home, Bookmark, User, FileText, BarChart2, CreditCard } from "lucide-react";
+import { Home, Bookmark, User, FileText, BarChart2, CreditCard, Settings } from "lucide-react";
 import SidebarLink from "./SidebarLink";
-
-const sidebarLinks = [
-  { name: "Home", href: "/dashboard", icon: Home },
-  { name: "Posts", href: "/posts", icon: FileText },
-  { name: "Drafts", href: "/drafts", icon: Bookmark },
-  { name: "Analytics", href: "/analytics", icon: BarChart2 },
-  { name: "Billing", href: "/billing", icon: CreditCard },
-  { name: "Settings", href: "/settings", icon: User },
-];
+import { useCurrentUser } from "@/features/auth/hooks";
 
 export default function SidebarLeft() {
+  const { user } = useCurrentUser();
+  const username = user?.username || "";
+
+  const sidebarLinks = [
+    { name: "Home", href: "/dashboard", icon: Home },
+    { name: "Posts", href: "/posts", icon: FileText },
+    { name: "Drafts", href: "/drafts", icon: Bookmark },
+    { name: "Analytics", href: "/analytics", icon: BarChart2 },
+    { name: "Billing", href: "/billing", icon: CreditCard },
+    { name: "Profile", href: username ? `/${username}` : "/dashboard", icon: User },
+    { name: "Settings", href: "/settings", icon: Settings },
+  ];
+
   return (
     <>
       {/* ── Desktop Sidebar ── */}
@@ -33,3 +38,4 @@ export default function SidebarLeft() {
     </>
   );
 }
+

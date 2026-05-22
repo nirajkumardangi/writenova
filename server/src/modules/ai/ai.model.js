@@ -9,7 +9,7 @@ const aiArticleSchema = new mongoose.Schema(
     },
     content: {
       type: String,
-      required: true,
+      default: "",
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,
@@ -25,6 +25,18 @@ const aiArticleSchema = new mongoose.Schema(
       type: String,
       enum: ["draft", "published"],
       default: "draft",
+    },
+    coverImage: {
+      type: String,
+      default: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60",
+    },
+    excerpt: {
+      type: String,
+      maxLength: 140,
+    },
+    topics: {
+      type: [String],
+      default: [],
     },
     generationMeta: {
       tone: { type: String },
