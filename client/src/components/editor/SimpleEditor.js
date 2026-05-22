@@ -160,13 +160,13 @@ export default function SimpleEditor({ content, onChange, placeholder = "Write y
 
   return (
     <div
-      className={`border border-gray-100 rounded-2xl bg-white shadow-sm overflow-hidden flex flex-col transition-all duration-300 ${
+      className={`border border-gray-100 rounded-2xl bg-white shadow-sm overflow-visible flex flex-col transition-all duration-300 ${
         isDark ? "dark-theme bg-stone-950 border-stone-800 shadow-stone-900/50" : ""
       }`}
     >
       {/* ── TOOLBAR ── */}
-      <div className={`flex flex-wrap items-center justify-between gap-1 p-2.5 border-b border-gray-100 ${
-        isDark ? "border-stone-800 bg-stone-900/50" : "bg-gray-50/50"
+      <div className={`sticky top-[54px] z-10 flex flex-wrap items-center justify-between gap-1 p-2.5 border-b border-gray-100 rounded-2xl ${
+        isDark ? "border-stone-800 bg-stone-900" : "bg-gray-50"
       }`}>
         <div className="flex flex-wrap items-center gap-0.5">
           {/* Undo/Redo */}
@@ -477,7 +477,7 @@ export default function SimpleEditor({ content, onChange, placeholder = "Write y
       </div>
 
       {/* ── EDITOR CONTENT ── */}
-      <div className={`flex-1 p-6 overflow-y-auto min-h-[400px] ${isDark ? "bg-stone-950 text-stone-100" : "bg-white"}`}>
+      <div className={`flex-1 p-6 overflow-y-auto min-h-[400px] rounded-b-2xl ${isDark ? "bg-stone-950 text-stone-100" : "bg-white"}`}>
         <EditorContent editor={editor} className="prose max-w-none" />
       </div>
 
