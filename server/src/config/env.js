@@ -11,6 +11,7 @@ const requiredEnvVars = [
   "SMTP_PASSWORD",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
+  "GEMINI_API_KEY",
 ];
 
 requiredEnvVars.forEach((key) => {
@@ -29,6 +30,7 @@ const env = Object.freeze({
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 });
 
 export default env;
