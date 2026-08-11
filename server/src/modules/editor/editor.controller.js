@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import AiArticle from "../ai/ai.model.js";
+import User from "../users/user.model.js";
 
 /**
  * @description Get single article by ID
@@ -172,11 +173,11 @@ export async function createArticle(req, res, next) {
 export async function getPublicArticle(req, res, next) {
   try {
     const { postId } = req.params;
-    const isObjectId = mongoose.Types.ObjectId.isValid(postId);
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(postId);
 
     const query = isObjectId
-      ? { $or: [{ _id: postId }, { slug: postId }], status: "published" }
-      : { slug: postId, status: "published" };
+      ? { $or: [{ _id: postId }, { slug: postId }] }
+      : { slug: postId };
 
     const article = await AiArticle.findOne(query).populate(
       "author",
@@ -186,7 +187,7 @@ export async function getPublicArticle(req, res, next) {
     if (!article) {
       return res.status(404).json({
         success: false,
-        message: "Article not found or not published",
+        message: "Article not found",
       });
     }
 
