@@ -1,47 +1,48 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, Check } from "lucide-react";
+import { X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 
 const ALL_TOPICS = [
+  "Programming",
   "Data Science",
+  "Technology",
   "Self Improvement",
   "Writing",
-  "Relationships",
-  "Politics",
-  "Cryptocurrency",
-  "Productivity",
-  "Technology",
-  "Design",
-  "Software Engineering",
   "Machine Learning",
-  "Mental Health",
+  "Productivity",
+  "Design",
+  "Business",
+  "Marketing",
 ];
 
 const INITIAL_RECOMMENDED_USERS = [
   {
-    id: "nick-babich",
-    name: "Nick Babich",
-    bio: "Product designer & editor-in-chief of UX Planet",
-    initials: "NB",
+    id: "rec-1",
+    name: "Dr. Sarah Lin",
+    username: "sarahlin",
+    bio: "AI researcher & author. Writing about cognitive architectures and LLMs.",
+    initials: "SL",
     bg: "bg-gradient-to-br from-indigo-500 to-purple-600 text-white",
   },
   {
-    id: "levelup-coding",
-    name: "Level Up Coding",
-    bio: "Coding tutorials, tech stories, and developer guides",
-    initials: "LC",
-    bg: "bg-gradient-to-br from-gray-700 to-black text-white",
+    id: "rec-2",
+    name: "Alex Rivera",
+    username: "alexrivera",
+    bio: "Staff Engineer. Thoughts on system design, distributed systems & Rust.",
+    initials: "AR",
+    bg: "bg-gradient-to-br from-emerald-400 to-teal-600 text-white",
   },
   {
-    id: "cassie-kozyrkov",
-    name: "Cassie Kozyrkov",
-    bio: "Chief Decision Scientist, Google. Stats, AI, and poetry.",
-    initials: "CK",
-    bg: "bg-gradient-to-br from-emerald-400 to-teal-600 text-white",
+    id: "rec-3",
+    name: "Elena Rostova",
+    username: "elenar",
+    bio: "Product strategist & essayist. Exploring the future of creative tools.",
+    initials: "ER",
+    bg: "bg-gradient-to-br from-pink-400 to-rose-500 text-white",
   },
 ];
 
@@ -52,7 +53,6 @@ export default function SidebarRight() {
   const currentTopic = searchParams?.get("topic") || "";
 
   const isDashboard = pathname === "/dashboard";
-  if (!isDashboard) return null;
 
   const [showPromo, setShowPromo] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -79,17 +79,25 @@ export default function SidebarRight() {
     if (isDismissed === "true") {
       setShowPromo(false);
     }
-
-    try {
-      const savedFollows = JSON.parse(localStorage.getItem("writenova_follows") || "{}");
-      setFollowedUsers(savedFollows);
-    } catch (e) {
-      console.error("Failed to load follows:", e);
-    }
   }, []);
 
   useEffect(() => {
-    const fetchRecommended = async () => {
+    const fetchFollowsAndRecommended = async () => {
+      // Fetch user's current following list from backend
+      try {
+        const followRes = await api.get("/social/following");
+        if (followRes.data.success) {
+          const followMap = {};
+          (followRes.data.following || []).forEach((u) => {
+            if (u._id) followMap[u._id] = true;
+          });
+          setFollowedUsers(followMap);
+        }
+      } catch (e) {
+        console.warn("Failed to fetch user following status:", e);
+      }
+
+      // Fetch recommended users
       try {
         const res = await api.get("/users/recommended");
         if (res.data.success && res.data.users?.length > 0) {
@@ -99,7 +107,7 @@ export default function SidebarRight() {
               id: u._id,
               username: u.username,
               name,
-              bio: `Writer on WriteNova. Sharing ideas and insights.`,
+              bio: u.bio || `Writer on WriteNova. Sharing ideas and insights.`,
               initials: name.substring(0, 2).toUpperCase(),
               bg: getAuthorBg(u._id),
             };
@@ -114,7 +122,7 @@ export default function SidebarRight() {
     };
 
     if (isDashboard) {
-      fetchRecommended();
+      fetchFollowsAndRecommended();
     }
   }, [isDashboard]);
 
@@ -136,15 +144,27 @@ export default function SidebarRight() {
     }
   };
 
-  const toggleFollow = (userId) => {
-    setFollowedUsers((prev) => {
-      const updated = { ...prev, [userId]: !prev[userId] };
-      localStorage.setItem("writenova_follows", JSON.stringify(updated));
-      return updated;
-    });
+  const toggleFollow = async (userId) => {
+    const isCurrentlyFollowed = !!followedUsers[userId];
+    // Optimistic UI update
+    setFollowedUsers((prev) => ({ ...prev, [userId]: !isCurrentlyFollowed }));
+
+    try {
+      const res = await api.post(`/social/follow/${userId}`);
+      if (res.data.success) {
+        setFollowedUsers((prev) => ({ ...prev, [userId]: res.data.following }));
+      }
+    } catch (err) {
+      console.error("Failed to toggle follow:", err);
+      // Revert on error
+      setFollowedUsers((prev) => ({ ...prev, [userId]: isCurrentlyFollowed }));
+    }
   };
 
   const visibleTopics = expandedTopics ? ALL_TOPICS : ALL_TOPICS.slice(0, 7);
+
+  // Guard: only render on dashboard
+  if (!isDashboard) return null;
 
   if (!isMounted) {
     return (
@@ -256,9 +276,9 @@ export default function SidebarRight() {
                       <span className="text-[14px] font-bold text-gray-950 hover:underline cursor-pointer truncate">
                         {user.name}
                       </span>
-                      <p className="text-[12px] text-gray-500 leading-[1.3] mt-0.5 line-clamp-2">
-                        {user.bio}
-                      </p>
+                        <p className="text-[12px] text-gray-500 leading-[1.3] mt-0.5 line-clamp-2">
+                          {user.bio}
+                        </p>
                     </div>
                   </Link>
 

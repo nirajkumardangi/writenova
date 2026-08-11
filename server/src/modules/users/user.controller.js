@@ -22,6 +22,42 @@ export async function getProfile(req, res, next) {
   }
 }
 
+export async function updateProfile(req, res, next) {
+  try {
+    const userId = req.user._id;
+    const { username, bio, avatar, coverImage, socialLinks } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (username !== undefined) {
+      // Check if username taken by another user
+      const existing = await User.findOne({ username: username.trim(), _id: { $ne: userId } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "Username is already taken" });
+      }
+      user.username = username.trim();
+    }
+
+    if (bio !== undefined) user.bio = bio;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (coverImage !== undefined) user.coverImage = coverImage;
+    if (socialLinks !== undefined) user.socialLinks = { ...user.socialLinks, ...socialLinks };
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getPublicProfile(req, res, next) {
   try {
     const { username } = req.params;
@@ -60,4 +96,3 @@ export async function getRecommendedUsers(req, res, next) {
     next(error);
   }
 }
-

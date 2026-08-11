@@ -61,7 +61,7 @@ api.interceptors.response.use(
       try {
         // Request new access token using HttpOnly refresh token cookie
         const res = await axios.post(
-          "http://localhost:5000/api/auth/refresh-token",
+          `${API}/auth/refresh-token`,
           {},
           { withCredentials: true },
         );

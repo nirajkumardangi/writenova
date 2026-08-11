@@ -21,25 +21,10 @@ export default function UserPublicPage() {
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
   const [likes, setLikes] = useState({});
   const [bookmarks, setBookmarks] = useState({});
   const [activeArticleForComments, setActiveArticleForComments] = useState(null);
-
-  useEffect(() => {
-    try {
-      const savedLikes = JSON.parse(localStorage.getItem("writenova_likes") || "{}");
-      const savedBookmarks = JSON.parse(localStorage.getItem("writenova_bookmarks") || "{}");
-      const savedFollows = JSON.parse(localStorage.getItem("writenova_follows") || "{}");
-      setLikes(savedLikes);
-      setBookmarks(savedBookmarks);
-
-      if (username) {
-        setIsFollowing(!!savedFollows[username]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, [username]);
 
   useEffect(() => {
     if (!username) return;
@@ -47,10 +32,23 @@ export default function UserPublicPage() {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/users/${username}`);
+        const res = await api.get(`/users/public/${username}`);
         if (res.data.success) {
           setProfileUser(res.data.user);
           setArticles(res.data.articles || []);
+
+          // Fetch follow status if user is logged in
+          if (res.data.user?._id) {
+            try {
+              const followRes = await api.get(`/social/follow/${res.data.user._id}`);
+              if (followRes.data.success) {
+                setIsFollowing(followRes.data.isFollowing);
+                setFollowerCount(followRes.data.followerCount);
+              }
+            } catch (fErr) {
+              console.warn("Could not check follow status:", fErr);
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to fetch user profile:", err);
@@ -63,32 +61,51 @@ export default function UserPublicPage() {
     fetchUserProfile();
   }, [username]);
 
-  const toggleFollow = () => {
-    const nextState = !isFollowing;
-    setIsFollowing(nextState);
+  const toggleFollow = async () => {
+    if (!profileUser?._id) return;
+    const isCurrentlyFollowing = isFollowing;
+    setIsFollowing(!isCurrentlyFollowing);
+    setFollowerCount((prev) => (isCurrentlyFollowing ? Math.max(0, prev - 1) : prev + 1));
+
     try {
-      const savedFollows = JSON.parse(localStorage.getItem("writenova_follows") || "{}");
-      savedFollows[username] = nextState;
-      localStorage.setItem("writenova_follows", JSON.stringify(savedFollows));
-    } catch (e) {
-      console.error(e);
+      const res = await api.post(`/social/follow/${profileUser._id}`);
+      if (res.data.success) {
+        setIsFollowing(res.data.following);
+        setFollowerCount(res.data.followerCount);
+      }
+    } catch (err) {
+      console.error("Failed to toggle follow:", err);
+      setIsFollowing(isCurrentlyFollowing);
+      setFollowerCount((prev) => (isCurrentlyFollowing ? prev + 1 : Math.max(0, prev - 1)));
     }
   };
 
-  const toggleLike = (id) => {
-    setLikes((prev) => {
-      const updated = { ...prev, [id]: !prev[id] };
-      localStorage.setItem("writenova_likes", JSON.stringify(updated));
-      return updated;
-    });
+  const toggleLike = async (id) => {
+    const isCurrentlyLiked = !!likes[id];
+    setLikes((prev) => ({ ...prev, [id]: !isCurrentlyLiked }));
+    try {
+      const res = await api.post(`/social/like/${id}`);
+      if (res.data.success) {
+        setLikes((prev) => ({ ...prev, [id]: res.data.liked }));
+      }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+      setLikes((prev) => ({ ...prev, [id]: isCurrentlyLiked }));
+    }
   };
 
-  const toggleBookmark = (id) => {
-    setBookmarks((prev) => {
-      const updated = { ...prev, [id]: !prev[id] };
-      localStorage.setItem("writenova_bookmarks", JSON.stringify(updated));
-      return updated;
-    });
+  const toggleBookmark = async (id) => {
+    const isCurrentlyBookmarked = !!bookmarks[id];
+    setBookmarks((prev) => ({ ...prev, [id]: !isCurrentlyBookmarked }));
+    try {
+      const res = await api.post(`/social/bookmark/${id}`);
+      if (res.data.success) {
+        setBookmarks((prev) => ({ ...prev, [id]: res.data.bookmarked }));
+      }
+    } catch (err) {
+      console.error("Failed to toggle bookmark:", err);
+      setBookmarks((prev) => ({ ...prev, [id]: isCurrentlyBookmarked }));
+    }
   };
 
   const getAuthorBg = (authorId) => {
@@ -156,11 +173,19 @@ export default function UserPublicPage() {
     <div className="mx-auto max-w-4xl py-8 px-4 sm:px-6 animate-in fade-in duration-300">
       {/* Profile Header Card */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 border-b border-gray-100 pb-8 mb-8 text-center sm:text-left">
-        <div
-          className={`h-24 w-24 rounded-full flex items-center justify-center font-bold text-3xl shadow-md select-none ${authorBg}`}
-        >
-          {initials}
-        </div>
+        {profileUser.avatar ? (
+          <img
+            src={profileUser.avatar}
+            alt={authorName}
+            className="h-24 w-24 rounded-full object-cover shadow-md select-none border-2 border-gray-100"
+          />
+        ) : (
+          <div
+            className={`h-24 w-24 rounded-full flex items-center justify-center font-bold text-3xl shadow-md select-none ${authorBg}`}
+          >
+            {initials}
+          </div>
+        )}
 
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -201,6 +226,10 @@ export default function UserPublicPage() {
             <span className="flex items-center gap-1.5">
               <BookOpen className="h-4 w-4 text-gray-400" />
               <strong className="text-gray-900">{articles.length}</strong> {articles.length === 1 ? "Story" : "Stories"} published
+            </span>
+            <span>·</span>
+            <span className="flex items-center gap-1.5">
+              <strong className="text-gray-900">{followerCount}</strong> Followers
             </span>
           </div>
         </div>

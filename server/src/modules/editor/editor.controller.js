@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import AiArticle from "../ai/ai.model.js";
 import User from "../users/user.model.js";
+import { sanitizeHtml } from "../../utils/sanitize.js";
 
 /**
  * @description Get single article by ID
@@ -49,7 +50,7 @@ export async function updateArticle(req, res, next) {
       });
     }
 
-    if (content !== undefined) article.content = content;
+    if (content !== undefined) article.content = sanitizeHtml(content);
     if (title !== undefined) article.title = title;
     if (status !== undefined) article.status = status;
     if (coverImage !== undefined) article.coverImage = coverImage;
@@ -147,7 +148,7 @@ export async function createArticle(req, res, next) {
 
     const article = await AiArticle.create({
       title: title || "Untitled Article",
-      content: content || "",
+      content: sanitizeHtml(content || ""),
       author: userId,
       aiGenerated: false,
       status: status || "draft",
@@ -193,8 +194,8 @@ export async function getPublicArticle(req, res, next) {
 
     if (!article.slug) {
       const baseSlug = article.title ? article.title.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w\-]+/g, "") : "untitled";
+      await AiArticle.updateOne({ _id: article._id }, { $set: { slug: baseSlug } });
       article.slug = baseSlug;
-      await article.save();
     }
 
     res.status(200).json({

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, User, Sparkles } from "lucide-react";
+import { X, Check, User, Loader2 } from "lucide-react";
 import { useCurrentUser } from "@/features/auth/hooks";
+import api from "@/lib/api";
 
 export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
   const { user } = useCurrentUser();
@@ -11,36 +12,41 @@ export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
   const [bio, setBio] = useState(
     user?.bio || "Writer on WriteNova. Sharing ideas, insights, and stories."
   );
+  const [avatar, setAvatar] = useState(user?.avatar || "");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      const updatedUser = {
-        ...user,
+    try {
+      const res = await api.put("/users/profile", {
         username: username.trim(),
         bio: bio.trim(),
-      };
+        avatar: avatar.trim() || undefined,
+      });
 
-      // Save locally
-      localStorage.setItem("writenova_custom_user", JSON.stringify(updatedUser));
-      setLoading(false);
-      setSuccess(true);
-
-      if (onProfileSaved) {
-        onProfileSaved(updatedUser);
+      if (res.data.success) {
+        setSuccess(true);
+        if (onProfileSaved) {
+          onProfileSaved(res.data.user);
+        }
+        setTimeout(() => {
+          setSuccess(false);
+          onClose();
+        }, 1000);
       }
-
-      setTimeout(() => {
-        setSuccess(false);
-        onClose();
-      }, 1000);
-    }, 400);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      setError(err.response?.data?.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,13 +65,19 @@ export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
           </button>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-200">
+            {error}
+          </div>
+        )}
+
         {success ? (
           <div className="py-12 flex flex-col items-center justify-center text-center">
             <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
               <Check className="h-6 w-6" />
             </div>
             <h4 className="font-serif font-bold text-lg text-gray-900">Profile Updated!</h4>
-            <p className="text-xs text-gray-500 mt-1">Your profile details have been saved.</p>
+            <p className="text-xs text-gray-500 mt-1">Your profile details have been saved to your account.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -78,8 +90,21 @@ export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl text-xs font-semibold focus:outline-none focus:border-black focus:bg-white transition-all"
+                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl text-xs font-semibold focus:outline-none focus:border-black focus:bg-white transition-all text-gray-900"
                 placeholder="Enter username"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+                Avatar Image URL (Optional)
+              </label>
+              <input
+                type="url"
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl text-xs font-medium focus:outline-none focus:border-black focus:bg-white transition-all text-gray-900"
+                placeholder="https://example.com/avatar.png"
               />
             </div>
 
@@ -91,7 +116,7 @@ export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl text-xs font-medium focus:outline-none focus:border-black focus:bg-white transition-all resize-none"
+                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl text-xs font-medium focus:outline-none focus:border-black focus:bg-white transition-all resize-none text-gray-900"
                 placeholder="Tell readers about yourself..."
               />
             </div>
@@ -107,8 +132,9 @@ export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 bg-black text-white rounded-full text-xs font-bold hover:bg-neutral-800 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                className="px-6 py-2.5 bg-black text-white rounded-full text-xs font-bold hover:bg-neutral-800 transition-all flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
               >
+                {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                 {loading ? "Saving..." : "Save Profile"}
               </button>
             </div>

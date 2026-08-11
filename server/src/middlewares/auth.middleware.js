@@ -8,7 +8,8 @@ export async function protect(req, res, next) {
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
-        message: "Unauthorized",
+        success: false,
+        message: "Unauthorized — no token provided",
       });
     }
 
@@ -16,14 +17,27 @@ export async function protect(req, res, next) {
     const token = authHeader.split(" ")[1];
 
     // verify token
-    const decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
+    let decodedToken;
+    try {
+      decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
+    } catch (jwtError) {
+      // Token expired or invalid — return 401 so the client can refresh
+      return res.status(401).json({
+        success: false,
+        message:
+          jwtError.name === "TokenExpiredError"
+            ? "Token expired"
+            : "Invalid token",
+      });
+    }
 
     // check if user exists
-    const user = await User.findById(decodedToken.id);
+    const user = await User.findById(decodedToken.id).select("-password");
 
     if (!user) {
       return res.status(401).json({
-        message: "Unauthorized",
+        success: false,
+        message: "Unauthorized — user not found",
       });
     }
 
@@ -33,8 +47,6 @@ export async function protect(req, res, next) {
     // call next middleware
     next();
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-    });
+    next(error);
   }
 }

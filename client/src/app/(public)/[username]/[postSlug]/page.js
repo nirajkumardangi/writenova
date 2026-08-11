@@ -32,6 +32,7 @@ export default function PostPublicPage() {
   
   // Interactive states
   const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -39,15 +40,41 @@ export default function PostPublicPage() {
   useEffect(() => {
     if (!postId) return;
 
-    const fetchArticle = async () => {
+    const fetchArticleAndSocial = async () => {
       try {
         setLoading(true);
         const res = await api.get(`/editor/public/${postId}`);
         if (res.data.success) {
-          setArticle(res.data.article);
-          const articleSlug = res.data.article?.slug || (res.data.article?.title ? res.data.article.title.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w\-]+/g, "") : "");
+          const art = res.data.article;
+          setArticle(art);
+          const articleSlug = art?.slug || (art?.title ? art.title.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w\-]+/g, "") : "");
           if (articleSlug && postId !== articleSlug && typeof window !== "undefined") {
             window.history.replaceState(null, "", `/${username}/${articleSlug}`);
+          }
+
+          // Fetch real like status, like count, and bookmark status if logged in
+          if (art?._id) {
+            try {
+              const [likeRes, bmRes] = await Promise.all([
+                api.get(`/social/like/${art._id}`),
+                api.get(`/social/bookmark/${art._id}`),
+              ]);
+              if (likeRes.data.success) {
+                setLiked(likeRes.data.liked);
+                setLikeCount(likeRes.data.likeCount);
+              }
+              if (bmRes.data.success) {
+                setBookmarked(bmRes.data.bookmarked);
+              }
+            } catch (sErr) {
+              // Fallback to public count if unauthenticated
+              try {
+                const countRes = await api.get(`/social/likes/count/${art._id}`);
+                if (countRes.data.success) setLikeCount(countRes.data.likeCount);
+              } catch (cErr) {
+                // Ignore
+              }
+            }
           }
         }
       } catch (err) {
@@ -58,7 +85,7 @@ export default function PostPublicPage() {
       }
     };
 
-    fetchArticle();
+    fetchArticleAndSocial();
   }, [postId]);
   
   // Trigger syntax highlighting on code blocks
@@ -77,6 +104,41 @@ export default function PostPublicPage() {
       return () => clearTimeout(timer);
     }
   }, [article]);
+
+  const toggleLike = async () => {
+    if (!article?._id) return;
+    const isCurrentlyLiked = liked;
+    setLiked(!isCurrentlyLiked);
+    setLikeCount((prev) => (isCurrentlyLiked ? Math.max(0, prev - 1) : prev + 1));
+
+    try {
+      const res = await api.post(`/social/like/${article._id}`);
+      if (res.data.success) {
+        setLiked(res.data.liked);
+        setLikeCount(res.data.likeCount);
+      }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+      setLiked(isCurrentlyLiked);
+      setLikeCount((prev) => (isCurrentlyLiked ? prev + 1 : Math.max(0, prev - 1)));
+    }
+  };
+
+  const toggleBookmark = async () => {
+    if (!article?._id) return;
+    const isCurrentlyBm = bookmarked;
+    setBookmarked(!isCurrentlyBm);
+
+    try {
+      const res = await api.post(`/social/bookmark/${article._id}`);
+      if (res.data.success) {
+        setBookmarked(res.data.bookmarked);
+      }
+    } catch (err) {
+      console.error("Failed to toggle bookmark:", err);
+      setBookmarked(isCurrentlyBm);
+    }
+  };
 
   const handleShare = () => {
     if (typeof window === "undefined") return;
@@ -113,12 +175,6 @@ export default function PostPublicPage() {
     const words = text.split(/\s+/).filter(Boolean).length;
     const minutes = Math.max(1, Math.ceil(words / 200));
     return `${minutes} min read`;
-  };
-
-  const getLikesCount = (id) => {
-    if (!id) return 0;
-    const code = id.toString().split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return (code % 150) + 12;
   };
 
   if (loading) {
@@ -187,8 +243,6 @@ export default function PostPublicPage() {
   const authorBgVal = getAuthorBg(article.author?._id);
   const formattedDate = formatDate(article.createdAt);
   const readTimeVal = getReadTime(article.content);
-  const baseLikes = getLikesCount(article._id);
-  const likesCountVal = baseLikes + (liked ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -288,7 +342,7 @@ export default function PostPublicPage() {
           {/* Social / Quick Action Strip */}
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setLiked(!liked)}
+              onClick={toggleLike}
               className={`p-2 rounded-full hover:bg-gray-50 active:scale-90 transition-all cursor-pointer ${
                 liked ? "text-rose-600" : "text-gray-400 hover:text-gray-600"
               }`}
@@ -306,7 +360,7 @@ export default function PostPublicPage() {
             </button>
 
             <button
-              onClick={() => setBookmarked(!bookmarked)}
+              onClick={toggleBookmark}
               className={`p-2 rounded-full hover:bg-gray-50 active:scale-90 transition-all cursor-pointer ${
                 bookmarked ? "text-amber-500" : "text-gray-400 hover:text-gray-600"
               }`}
@@ -345,7 +399,7 @@ export default function PostPublicPage() {
           </div>
         )}
 
-        {/* Excerpt (Intro paragraph style) */}
+        {/* Excerpt */}
         {article.excerpt && (
           <div className="border-l-4 border-black pl-5 italic text-gray-600 text-lg leading-relaxed font-sans mb-10 py-1">
             {article.excerpt}
@@ -377,7 +431,7 @@ export default function PostPublicPage() {
 
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setLiked(!liked)}
+                onClick={toggleLike}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-full text-xs font-bold transition-all cursor-pointer ${
                   liked 
                     ? "bg-rose-50 border-rose-100 text-rose-600" 
@@ -385,7 +439,7 @@ export default function PostPublicPage() {
                 }`}
               >
                 <Heart className={`h-4 w-4 ${liked ? "fill-rose-600" : ""}`} />
-                <span>{likesCountVal} Likes</span>
+                <span>{likeCount} Likes</span>
               </button>
 
               <Link

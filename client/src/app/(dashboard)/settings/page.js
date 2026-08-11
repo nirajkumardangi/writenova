@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCurrentUser } from "@/features/auth/hooks";
-import { Calendar, Mail, Settings, User, Check, Edit2, Shield, Sparkles } from "lucide-react";
+import { Calendar, Mail, Settings, User, Check, Edit2, Shield, Sparkles, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 
 export default function SettingsPage() {
@@ -11,8 +11,10 @@ export default function SettingsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(user?.username || "");
   const [bio, setBio] = useState(user?.bio || "Writer on WriteNova. Sharing ideas, insights, and stories.");
+  const [avatar, setAvatar] = useState(user?.avatar || "");
   const [loading, setLoading] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const joinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", {
@@ -26,15 +28,23 @@ export default function SettingsPage() {
     e.preventDefault();
     setLoading(true);
     setSavedMsg("");
+    setErrorMsg("");
 
     try {
-      // Simulate profile update or save locally
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setSavedMsg("Profile settings updated successfully!");
-      setIsEditing(false);
-      setTimeout(() => setSavedMsg(""), 4000);
+      const res = await api.put("/users/profile", {
+        username: username.trim(),
+        bio: bio.trim(),
+        avatar: avatar.trim() || undefined,
+      });
+
+      if (res.data.success) {
+        setSavedMsg("Profile settings updated successfully!");
+        setIsEditing(false);
+        setTimeout(() => setSavedMsg(""), 4000);
+      }
     } catch (err) {
       console.error("Save error:", err);
+      setErrorMsg(err.response?.data?.message || "Failed to save profile settings");
     } finally {
       setLoading(false);
     }
@@ -63,7 +73,7 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      {/* Save Success Alert */}
+      {/* Alerts */}
       {savedMsg && (
         <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-in zoom-in-95 duration-200">
           <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
@@ -71,12 +81,18 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-in zoom-in-95 duration-200">
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
       {/* Profile Overview Card */}
       <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm mb-8">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {user?.avatar ? (
+          {avatar || user?.avatar ? (
             <img
-              src={user.avatar}
+              src={avatar || user?.avatar}
               alt="Profile Picture"
               className="h-24 w-24 rounded-full object-cover border-2 border-gray-100 shadow-sm"
             />
@@ -90,7 +106,7 @@ export default function SettingsPage() {
             <h2 className="text-2xl font-serif font-bold text-gray-900 mb-1">
               {username || user?.username || "Writer"}
             </h2>
-            <p className="text-xs text-gray-400 font-semibold mb-3">@{username || "writer"}</p>
+            <p className="text-xs text-gray-400 font-semibold mb-3">@{username || user?.username || "writer"}</p>
             <p className="text-sm text-gray-600 leading-relaxed max-w-lg mb-4">{bio}</p>
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-6 text-xs text-gray-500 font-medium border-t border-gray-100 pt-4">
@@ -127,8 +143,21 @@ export default function SettingsPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-black transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-black transition-colors text-gray-900"
                 placeholder="Your username"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                Avatar Image URL (Optional)
+              </label>
+              <input
+                type="url"
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-black transition-colors text-gray-900"
+                placeholder="https://example.com/avatar.png"
               />
             </div>
 
@@ -140,7 +169,7 @@ export default function SettingsPage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-black transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-black transition-colors text-gray-900"
                 placeholder="Short bio for your public story page..."
               />
             </div>
@@ -149,8 +178,9 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer"
+                className="px-5 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-2"
               >
+                {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                 {loading ? "Saving..." : "Save Profile Changes"}
               </button>
               <button

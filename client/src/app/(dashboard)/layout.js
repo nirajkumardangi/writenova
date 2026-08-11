@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import DashboardAuthGuard from "@/components/auth/DashboardAuthGuard";
 import AuthenticatedNavbar from "@/components/dashboard/navbar/AuthenticatedNavbar";
@@ -23,7 +24,11 @@ export default function DashboardLayout({ children }) {
           >
             {children}
           </main>
-          {!isEditorRoute && <SidebarRight />}
+          {!isEditorRoute && (
+            <Suspense fallback={null}>
+              <SidebarRight />
+            </Suspense>
+          )}
         </div>
       </div>
     </DashboardAuthGuard>
