@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { BookOpen, Calendar, Sparkles, Loader2, FileText } from "lucide-react";
+import { BookOpen, Calendar, Sparkles, Loader2, FileText, Settings } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { getStorySlug } from "@/lib/slugify";
+import { useCurrentUser } from "@/features/auth/hooks";
 
 export default function UserPublicPage() {
+  const { user: currentUser } = useCurrentUser();
   const params = useParams();
   const username = params?.username;
 
@@ -114,6 +116,14 @@ export default function UserPublicPage() {
               </h1>
               <p className="text-sm text-gray-400 font-medium mt-0.5">@{profileUser.username || "user"}</p>
             </div>
+            {currentUser && currentUser.username === profileUser.username && (
+              <Link
+                href="/settings"
+                className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-xs font-bold transition-all self-center sm:self-auto cursor-pointer"
+              >
+                <Settings className="h-3.5 w-3.5" /> Edit Profile
+              </Link>
+            )}
           </div>
           
           <p className="text-sm text-gray-500 leading-relaxed max-w-md mt-1">
