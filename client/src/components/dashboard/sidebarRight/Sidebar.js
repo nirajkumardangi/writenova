@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Check } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 
 const ALL_TOPICS = [
@@ -47,14 +47,16 @@ const INITIAL_RECOMMENDED_USERS = [
 
 export default function SidebarRight() {
   const pathname = usePathname();
-  const isDashboard = pathname === "/dashboard";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentTopic = searchParams?.get("topic") || "";
 
+  const isDashboard = pathname === "/dashboard";
   if (!isDashboard) return null;
 
   const [showPromo, setShowPromo] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [expandedTopics, setExpandedTopics] = useState(false);
-  const [activeTopics, setActiveTopics] = useState([]);
   const [followedUsers, setFollowedUsers] = useState({});
   const [recommendedUsers, setRecommendedUsers] = useState([]);
 
@@ -71,12 +73,18 @@ export default function SidebarRight() {
     return `bg-gradient-to-br ${gradients[code % gradients.length]}`;
   };
 
-  // Safe client-side check to prevent hydration mismatch
   useEffect(() => {
     setIsMounted(true);
     const isDismissed = localStorage.getItem("writenova_promo_dismissed");
     if (isDismissed === "true") {
       setShowPromo(false);
+    }
+
+    try {
+      const savedFollows = JSON.parse(localStorage.getItem("writenova_follows") || "{}");
+      setFollowedUsers(savedFollows);
+    } catch (e) {
+      console.error("Failed to load follows:", e);
     }
   }, []);
 
@@ -101,7 +109,6 @@ export default function SidebarRight() {
           setRecommendedUsers(INITIAL_RECOMMENDED_USERS);
         }
       } catch (err) {
-        console.error("Failed to fetch recommended users:", err);
         setRecommendedUsers(INITIAL_RECOMMENDED_USERS);
       }
     };
@@ -122,32 +129,27 @@ export default function SidebarRight() {
   };
 
   const toggleTopic = (topic) => {
-    if (activeTopics.includes(topic)) {
-      setActiveTopics(activeTopics.filter((t) => t !== topic));
+    if (currentTopic === topic) {
+      router.push("/dashboard");
     } else {
-      setActiveTopics([...activeTopics, topic]);
+      router.push(`/dashboard?topic=${encodeURIComponent(topic)}`);
     }
   };
 
   const toggleFollow = (userId) => {
-    setFollowedUsers((prev) => ({
-      ...prev,
-      [userId]: !prev[userId],
-    }));
+    setFollowedUsers((prev) => {
+      const updated = { ...prev, [userId]: !prev[userId] };
+      localStorage.setItem("writenova_follows", JSON.stringify(updated));
+      return updated;
+    });
   };
 
-  // Determine which topics to show (7 initial, or all if expanded)
   const visibleTopics = expandedTopics ? ALL_TOPICS : ALL_TOPICS.slice(0, 7);
 
   if (!isMounted) {
-    // Avoid mismatch during SSR hydration by rendering empty placeholder
     return (
       <div className="w-[368px] flex-shrink-0 animate-pulse space-y-8 p-8">
         <div className="h-48 bg-gray-100 rounded-2xl"></div>
-        <div className="space-y-3">
-          <div className="h-6 w-32 bg-gray-100 rounded"></div>
-          <div className="h-24 bg-gray-100 rounded"></div>
-        </div>
       </div>
     );
   }
@@ -155,13 +157,12 @@ export default function SidebarRight() {
   return (
     <aside className="hidden no-scrollbar md:block w-full md:w-[260px] lg:w-[320px] xl:w-[368px] flex-shrink-0 border-l border-gray-100 pl-6 lg:pl-8 pr-6 lg:pr-8 py-8 overflow-y-auto">
       <div className="sticky top-4 flex flex-col gap-8 select-none">
-        {/* ── Writing on Medium Promo Card ── */}
+        {/* Promo Card */}
         {showPromo ? (
           <div className="relative overflow-hidden rounded-2xl bg-blue-50/70 border border-blue-100/50 p-6 transition-all duration-300 hover:shadow-md">
-            {/* Close Button */}
             <button
               onClick={handleDismissPromo}
-              className="absolute top-4 right-4 text-blue-400 hover:text-blue-900 transition-colors p-1 rounded-full hover:bg-blue-100/50"
+              className="absolute top-4 right-4 text-blue-400 hover:text-blue-900 transition-colors p-1 rounded-full hover:bg-blue-100/50 cursor-pointer"
               aria-label="Dismiss banner"
             >
               <X className="h-4 w-4" />
@@ -180,14 +181,10 @@ export default function SidebarRight() {
                 <span className="text-blue-500 mt-0.5 select-none">•</span>
                 <span>Read WriteNova tips & tricks</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-500 mt-0.5 select-none">•</span>
-                <span>Get practical writing advice</span>
-              </li>
             </ul>
 
             <Link
-              href="/new-story"
+              href="/editor/new"
               className="inline-block px-5 py-2 bg-black text-white hover:bg-neutral-800 active:scale-95 text-sm font-semibold rounded-full shadow-sm transition-all"
             >
               Start writing
@@ -204,7 +201,7 @@ export default function SidebarRight() {
           </div>
         )}
 
-        {/* ── Recommended Topics ── */}
+        {/* Recommended Topics */}
         <div className="flex flex-col gap-3">
           <h3 className="text-[16px] font-bold text-gray-900 font-sans">
             Recommended topics
@@ -212,14 +209,14 @@ export default function SidebarRight() {
 
           <div className="flex flex-wrap gap-2 transition-all duration-300">
             {visibleTopics.map((topic) => {
-              const isActive = activeTopics.includes(topic);
+              const isActive = currentTopic.toLowerCase() === topic.toLowerCase();
               return (
                 <button
                   key={topic}
                   onClick={() => toggleTopic(topic)}
                   className={`text-[13px] px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
                     isActive
-                      ? "bg-black text-white hover:bg-neutral-800"
+                      ? "bg-black text-white shadow-sm"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -237,7 +234,7 @@ export default function SidebarRight() {
           </button>
         </div>
 
-        {/* ── Who to Follow ── */}
+        {/* Who to Follow */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[16px] font-bold text-gray-900 font-sans">
             Who to follow
@@ -247,20 +244,14 @@ export default function SidebarRight() {
             {recommendedUsers.map((user) => {
               const isFollowed = !!followedUsers[user.id];
               return (
-                <div
-                  key={user.id}
-                  className="flex items-start justify-between gap-3 group"
-                >
-                  {/* User Info Column */}
+                <div key={user.id} className="flex items-start justify-between gap-3 group">
                   <Link href={`/${user.username || 'user'}`} className="flex gap-3 flex-1 min-w-0">
-                    {/* Avatar */}
                     <div
                       className={`h-[40px] w-[40px] rounded-full flex-shrink-0 flex items-center justify-center font-bold text-[14px] shadow-sm tracking-wide ${user.bg} group-hover:scale-105 transition-transform duration-200`}
                     >
                       {user.initials}
                     </div>
 
-                    {/* Text details */}
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-[14px] font-bold text-gray-950 hover:underline cursor-pointer truncate">
                         {user.name}
@@ -271,26 +262,21 @@ export default function SidebarRight() {
                     </div>
                   </Link>
 
-                  {/* Follow Button */}
                   <button
                     onClick={() => toggleFollow(user.id)}
-                    className={`text-[13px] font-medium px-4 py-1.5 rounded-full transition-all border shrink-0 cursor-pointer ${
+                    className={`text-[13px] font-semibold px-4 py-1.5 rounded-full transition-all border shrink-0 cursor-pointer ${
                       isFollowed
-                        ? "bg-transparent text-gray-500 border-gray-300 hover:border-red-500 hover:text-red-500 hover:after:content-['Unfollow'] after:content-['Following'] hover:bg-red-50/20"
-                        : "bg-transparent text-black border-neutral-600 hover:border-black"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-transparent text-black border-gray-300 hover:border-black"
                     }`}
                     style={{ minWidth: "90px", textAlign: "center" }}
                   >
-                    {!isFollowed && "Follow"}
+                    {isFollowed ? "Following" : "Follow"}
                   </button>
                 </div>
               );
             })}
           </div>
-
-          <button className="text-sm font-medium text-gray-500 hover:text-black transition-colors self-start mt-1 cursor-pointer">
-            See more suggestions
-          </button>
         </div>
       </div>
     </aside>

@@ -1,17 +1,33 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bookmark, Heart, MessageCircle, MoreHorizontal, Loader2 } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, MoreHorizontal, Loader2, Sparkles, Filter, X } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { getStorySlug } from "@/lib/slugify";
+import CommentsDrawer from "./CommentsDrawer";
 
-export default function Feed() {
+export default function Feed({ selectedTopic, onClearTopic }) {
   const [activeTab, setActiveTab] = useState("for-you");
   const [bookmarks, setBookmarks] = useState({});
   const [likes, setLikes] = useState({});
+  const [likeCounts, setLikeCounts] = useState({});
+  const [commentCounts, setCommentCounts] = useState({});
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeArticleForComments, setActiveArticleForComments] = useState(null);
+
+  // Load persistent likes and bookmarks from localStorage
+  useEffect(() => {
+    try {
+      const savedLikes = JSON.parse(localStorage.getItem("writenova_likes") || "{}");
+      const savedBookmarks = JSON.parse(localStorage.getItem("writenova_bookmarks") || "{}");
+      setLikes(savedLikes);
+      setBookmarks(savedBookmarks);
+    } catch (e) {
+      console.error("Failed to load likes/bookmarks from storage:", e);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -30,16 +46,34 @@ export default function Feed() {
   }, []);
 
   const toggleBookmark = (id) => {
-    setBookmarks((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    setBookmarks((prev) => {
+      const updated = { ...prev, [id]: !prev[id] };
+      localStorage.setItem("writenova_bookmarks", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const toggleLike = (id) => {
-    setLikes((prev) => ({
+    setLikes((prev) => {
+      const isCurrentlyLiked = !!prev[id];
+      const updatedLikes = { ...prev, [id]: !isCurrentlyLiked };
+      localStorage.setItem("writenova_likes", JSON.stringify(updatedLikes));
+
+      // Update count
+      const base = getLikesCount(id);
+      setLikeCounts((cPrev) => ({
+        ...cPrev,
+        [id]: isCurrentlyLiked ? Math.max(0, (cPrev[id] ?? base) - 1) : (cPrev[id] ?? base) + 1,
+      }));
+
+      return updatedLikes;
+    });
+  };
+
+  const handleCommentAdded = (articleId, newCount) => {
+    setCommentCounts((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [articleId]: newCount,
     }));
   };
 
@@ -57,6 +91,7 @@ export default function Feed() {
   };
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "";
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -80,38 +115,67 @@ export default function Feed() {
 
   const getLikesCount = (id) => {
     if (!id) return 0;
+    if (likeCounts[id] !== undefined) return likeCounts[id];
     const code = id.toString().split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return (code % 150) + 12;
+    const base = (code % 150) + 12;
+    return likes[id] ? base + 1 : base;
   };
 
   const getCommentsCount = (id) => {
     if (!id) return 0;
+    if (commentCounts[id] !== undefined) return commentCounts[id];
     const code = id.toString().split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return (code % 25) + 2;
   };
 
-  const activeStories = activeTab === "featured"
-    ? articles.filter((a) => a.aiGenerated)
-    : articles;
+  // Filter articles by tab and topic selection
+  let filteredStories = articles;
+
+  if (selectedTopic) {
+    filteredStories = filteredStories.filter((a) => {
+      const cat = (a.generationMeta?.category || "").toLowerCase();
+      const topicLower = selectedTopic.toLowerCase();
+      return cat.includes(topicLower) || (a.title || "").toLowerCase().includes(topicLower);
+    });
+  }
+
+  if (activeTab === "featured") {
+    filteredStories = filteredStories.filter((a) => a.aiGenerated);
+  } else if (activeTab === "following") {
+    // Show followed articles or half of articles for demonstration
+    filteredStories = filteredStories.slice(0, Math.max(1, Math.floor(filteredStories.length / 2)));
+  }
 
   return (
     <div className="mx-auto max-w-3xl py-8 px-4 sm:px-6">
       {/* Navigation Tabs */}
-      <div className="border-b border-gray-100 mb-8 sticky top-0 bg-white z-10">
-        <nav className="-mb-px flex gap-8 ">
-          {["for-you", "following", "featured"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`whitespace-nowrap border-b-2 py-4 px-1 text-[14px] sm:text-[15px] font-semibold transition-colors cursor-pointer capitalize ${
-                activeTab === tab
-                  ? "border-black text-black"
-                  : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              {tab.replace("-", " ")}
-            </button>
-          ))}
+      <div className="border-b border-gray-100 mb-8 sticky top-0 bg-white z-10 select-none">
+        <nav className="-mb-px flex gap-8 items-center justify-between">
+          <div className="flex gap-8">
+            {["for-you", "following", "featured"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`whitespace-nowrap border-b-2 py-4 px-1 text-[14px] sm:text-[15px] font-semibold transition-colors cursor-pointer capitalize ${
+                  activeTab === tab
+                    ? "border-black text-black"
+                    : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-700"
+                }`}
+              >
+                {tab.replace("-", " ")}
+              </button>
+            ))}
+          </div>
+
+          {selectedTopic && (
+            <div className="flex items-center gap-2 bg-black text-white text-xs px-3 py-1 rounded-full font-medium">
+              <Filter className="h-3 w-3" />
+              <span>{selectedTopic}</span>
+              <button onClick={onClearTopic} className="hover:text-gray-300 ml-1 cursor-pointer">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
         </nav>
       </div>
 
@@ -120,142 +184,103 @@ export default function Feed() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="h-8 w-8 text-black animate-spin stroke-[1.5]" />
-            <span className="mt-3 text-sm text-gray-500 font-medium">Loading your feed...</span>
+            <span className="mt-3 text-sm text-gray-500 font-medium">Loading stories...</span>
           </div>
-        ) : activeStories.length > 0 ? (
-          activeStories.map((story) => {
-            const storyId = story._id;
-            const isBookmarked = !!bookmarks[storyId];
-            const isLiked = !!likes[storyId];
-
-            const authorVal = story.author?.username || story.author?.email?.split("@")[0] || "Anonymous";
-            const initialsVal = authorVal.substring(0, 2).toUpperCase();
-            const authorBgVal = getAuthorBg(story.author?._id || storyId);
-            const dateVal = formatDate(story.createdAt);
-            const titleVal = story.title || "Untitled";
-            const excerptVal = story.excerpt || truncateContent(story.content);
-            const topicVal = story.generationMeta?.category || "General";
-            const readTimeVal = getReadTime(story.content);
-
-            const likesCountVal = getLikesCount(storyId);
-            const commentsCountVal = getCommentsCount(storyId);
-            const displayLikes = likesCountVal + (isLiked ? 1 : 0);
+        ) : filteredStories.length > 0 ? (
+          filteredStories.map((article) => {
+            const authorName = article.author?.username || article.author?.email?.split("@")[0] || "Anonymous";
+            const authorUsername = article.author?.username || "author";
+            const initials = authorName.substring(0, 2).toUpperCase();
+            const authorBg = getAuthorBg(article.author?._id);
+            const isLiked = !!likes[article._id];
+            const isBookmarked = !!bookmarks[article._id];
+            const publicUrl = `/${authorUsername}/${getStorySlug(article)}`;
 
             return (
-              <article
-                key={storyId}
-                className="flex flex-col gap-3 pb-8 border-b border-gray-100/70 last:border-b-0 group"
-              >
-                {/* Author line */}
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[9px] ${authorBgVal}`}
-                  >
-                    {initialsVal}
-                  </div>
-                  <span className="text-xs font-semibold text-gray-900">
-                    {authorVal}
-                  </span>
-                  <span className="text-xs text-gray-400 select-none">•</span>
-                  <span className="text-xs text-gray-500">{dateVal}</span>
+              <article key={article._id} className="flex flex-col gap-3 pb-10 border-b border-gray-100/80 last:border-b-0 group">
+                {/* Author row */}
+                <div className="flex items-center gap-2.5">
+                  <Link href={`/${authorUsername}`}>
+                    <div
+                      className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-[11px] shadow-xs select-none ${authorBg}`}
+                    >
+                      {initials}
+                    </div>
+                  </Link>
+                  <Link href={`/${authorUsername}`} className="text-xs font-semibold text-gray-900 hover:underline">
+                    {authorName}
+                  </Link>
+                  <span className="text-xs text-gray-400 font-medium">•</span>
+                  <span className="text-xs text-gray-400 font-medium">{formatDate(article.createdAt)}</span>
+                  {article.aiGenerated && (
+                    <span className="ml-auto flex items-center gap-1 text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full">
+                      <Sparkles className="h-3 w-3" /> AI Featured
+                    </span>
+                  )}
                 </div>
 
-                {/* Title & Excerpt & Image */}
-                <Link
-                  href={`/${authorVal}/${getStorySlug(story)}`}
-                  className="flex justify-between items-start gap-6 group/link cursor-pointer block"
-                >
+                {/* Title & Excerpt & Cover Image */}
+                <Link href={publicUrl} className="flex justify-between items-start gap-6 group/link cursor-pointer">
                   <div className="flex-1 flex flex-col gap-1">
-                    <h2 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 group-hover:text-neutral-800 group-hover/link:text-neutral-800 transition-colors leading-tight">
-                      {titleVal}
+                    <h2 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 group-hover/link:text-neutral-700 transition-colors leading-tight">
+                      {article.title || "Untitled Story"}
                     </h2>
-                    <p className="text-sm sm:text-[15px] text-gray-500 line-clamp-3 leading-relaxed mt-1 font-sans">
-                      {excerptVal}
+                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mt-1 font-sans">
+                      {article.excerpt || truncateContent(article.content)}
                     </p>
                   </div>
-                  {story.coverImage && (
-                    <div className="h-16 w-24 sm:h-20 sm:w-32 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100/80">
+                  {article.coverImage && (
+                    <div className="h-20 w-28 sm:h-24 sm:w-36 flex-shrink-0 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
                       <img
-                        src={story.coverImage}
-                        alt={titleVal}
-                        className="h-full w-full object-cover group-hover:scale-105 group-hover/link:scale-105 transition-transform duration-300"
-                        loading="lazy"
+                        src={article.coverImage}
+                        alt={article.title}
+                        className="h-full w-full object-cover group-hover/link:scale-105 transition-transform duration-300"
                       />
                     </div>
                   )}
                 </Link>
 
-                {/* Footer of the article */}
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
-                    {story.topics && story.topics.length > 0 ? (
-                      story.topics.map((t) => (
-                        <span key={t} className="text-[11px] font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full capitalize">
-                          {t}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-[11px] font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                        {topicVal}
-                      </span>
-                    )}
-                    <span className="text-xs text-gray-400">
-                      {readTimeVal}
+                {/* Article Footer Toolbar */}
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-400 font-medium select-none">
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <span className="bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold capitalize">
+                      {article.generationMeta?.category || "General"}
                     </span>
-
-                    {/* Likes (Heart Button) */}
-                    <button
-                      onClick={() => toggleLike(storyId)}
-                      className={`flex items-center gap-1.5 text-xs transition-colors cursor-pointer select-none ${
-                        isLiked
-                          ? "text-rose-600 font-semibold"
-                          : "text-gray-400 hover:text-black"
-                      }`}
-                      aria-label={isLiked ? "Unlike story" : "Like story"}
-                    >
-                      <Heart
-                        className={`h-4 w-4 transition-transform duration-200 ${
-                          isLiked ? "fill-rose-500 text-rose-500 scale-110" : ""
-                        }`}
-                      />
-                      <span>{displayLikes}</span>
-                    </button>
-
-                    {/* Comments (Message Circle) */}
-                    <button
-                      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-black transition-colors cursor-pointer select-none"
-                      aria-label={`${commentsCountVal} comments`}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span>{commentsCountVal}</span>
-                    </button>
+                    <span>{getReadTime(article.content)}</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Bookmark Button */}
+                  <div className="flex items-center gap-4">
+                    {/* Like Button */}
                     <button
-                      onClick={() => toggleBookmark(storyId)}
-                      className={`p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer ${
-                        isBookmarked
-                          ? "text-amber-500"
-                          : "text-gray-400 hover:text-black"
+                      onClick={() => toggleLike(article._id)}
+                      className={`flex items-center gap-1.5 p-1.5 rounded-full transition-all cursor-pointer ${
+                        isLiked ? "text-red-500 font-bold" : "hover:text-gray-700"
                       }`}
-                      aria-label={
-                        isBookmarked ? "Remove bookmark" : "Bookmark article"
-                      }
+                      title="Like story"
                     >
-                      <Bookmark
-                        className="h-[18px] w-[18px]"
-                        fill={isBookmarked ? "currentColor" : "none"}
-                      />
+                      <Heart className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+                      <span className="text-xs">{getLikesCount(article._id)}</span>
                     </button>
 
-                    {/* Options Button */}
+                    {/* Comment Button */}
                     <button
-                      className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-colors cursor-pointer"
-                      aria-label="More options"
+                      onClick={() => setActiveArticleForComments(article)}
+                      className="flex items-center gap-1.5 p-1.5 rounded-full hover:text-gray-700 transition-colors cursor-pointer"
+                      title="View responses"
                     >
-                      <MoreHorizontal className="h-[18px] w-[18px]" />
+                      <MessageCircle className="h-4 w-4" />
+                      <span className="text-xs">{getCommentsCount(article._id)}</span>
+                    </button>
+
+                    {/* Save / Bookmark Button */}
+                    <button
+                      onClick={() => toggleBookmark(article._id)}
+                      className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                        isBookmarked ? "text-black" : "hover:text-gray-700"
+                      }`}
+                      title={isBookmarked ? "Remove bookmark" : "Save story"}
+                    >
+                      <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-black" : ""}`} />
                     </button>
                   </div>
                 </div>
@@ -263,11 +288,31 @@ export default function Feed() {
             );
           })
         ) : (
-          <div className="text-gray-500 text-center py-20">
-            Your feed is currently empty.
+          <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500 bg-gray-50/50 rounded-3xl p-8 border border-gray-100">
+            <Sparkles className="h-8 w-8 text-gray-400 mb-3" />
+            <h3 className="text-base font-serif font-bold text-gray-900">No stories found</h3>
+            <p className="text-xs text-gray-500 max-w-sm mt-1 mb-4">
+              Try selecting a different topic or view the "For You" tab.
+            </p>
+            {selectedTopic && (
+              <button
+                onClick={onClearTopic}
+                className="px-4 py-2 bg-black text-white text-xs font-bold rounded-full hover:bg-neutral-800 transition-colors"
+              >
+                Clear Topic Filter
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Slide-over Comments Drawer */}
+      <CommentsDrawer
+        isOpen={!!activeArticleForComments}
+        onClose={() => setActiveArticleForComments(null)}
+        article={activeArticleForComments}
+        onCommentAdded={handleCommentAdded}
+      />
     </div>
   );
 }

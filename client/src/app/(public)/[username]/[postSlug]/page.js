@@ -11,12 +11,14 @@ import {
   BookOpen, 
   Sparkles, 
   Check,
-  Home
+  Home,
+  MessageCircle
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
 import "@/components/editor/editor.css";
 import hljs from "highlight.js";
+import CommentsDrawer from "@/components/dashboard/CommentsDrawer";
 
 export default function PostPublicPage() {
   const params = useParams();
@@ -28,10 +30,11 @@ export default function PostPublicPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
-  // Interactive mock states
+  // Interactive states
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
     if (!postId) return;
@@ -295,6 +298,14 @@ export default function PostPublicPage() {
             </button>
             
             <button
+              onClick={() => setShowComments(true)}
+              className="p-2 rounded-full hover:bg-gray-50 text-gray-400 hover:text-gray-600 active:scale-90 transition-all cursor-pointer"
+              title="View responses"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </button>
+
+            <button
               onClick={() => setBookmarked(!bookmarked)}
               className={`p-2 rounded-full hover:bg-gray-50 active:scale-90 transition-all cursor-pointer ${
                 bookmarked ? "text-amber-500" : "text-gray-400 hover:text-gray-600"
@@ -388,6 +399,12 @@ export default function PostPublicPage() {
         </div>
 
       </main>
+
+      <CommentsDrawer
+        isOpen={showComments}
+        onClose={() => setShowComments(false)}
+        article={article}
+      />
     </div>
   );
 }
