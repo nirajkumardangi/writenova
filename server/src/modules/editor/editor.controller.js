@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import AiArticle from "../ai/ai.model.js";
 
 /**
@@ -38,20 +39,7 @@ export async function updateArticle(req, res, next) {
     const { content, title, status, coverImage, excerpt, topics } = req.body;
     const userId = req.user._id;
 
-    // Build update object
-    const updateData = {};
-    if (content !== undefined) updateData.content = content;
-    if (title !== undefined) updateData.title = title;
-    if (status !== undefined) updateData.status = status;
-    if (coverImage !== undefined) updateData.coverImage = coverImage;
-    if (excerpt !== undefined) updateData.excerpt = excerpt;
-    if (topics !== undefined) updateData.topics = topics;
-
-    const article = await AiArticle.findOneAndUpdate(
-      { _id: postId, author: userId },
-      { $set: updateData },
-      { returnDocument: 'after' }
-    );
+    const article = await AiArticle.findOne({ _id: postId, author: userId });
 
     if (!article) {
       return res.status(404).json({
@@ -59,6 +47,15 @@ export async function updateArticle(req, res, next) {
         message: "Article not found or unauthorized",
       });
     }
+
+    if (content !== undefined) article.content = content;
+    if (title !== undefined) article.title = title;
+    if (status !== undefined) article.status = status;
+    if (coverImage !== undefined) article.coverImage = coverImage;
+    if (excerpt !== undefined) article.excerpt = excerpt;
+    if (topics !== undefined) article.topics = topics;
+
+    await article.save();
 
     res.status(200).json({
       success: true,
@@ -168,22 +165,35 @@ export async function createArticle(req, res, next) {
 }
 
 /**
- * @description Get a published article by ID publicly
+ * @description Get a published article by ID or Slug publicly
  * @route GET /api/editor/public/:postId
  * @access Public
  */
 export async function getPublicArticle(req, res, next) {
   try {
     const { postId } = req.params;
+    const isObjectId = mongoose.Types.ObjectId.isValid(postId);
 
-    const article = await AiArticle.findOne({ _id: postId, status: "published" })
-      .populate("author", "username email avatar");
+    const query = isObjectId
+      ? { $or: [{ _id: postId }, { slug: postId }], status: "published" }
+      : { slug: postId, status: "published" };
+
+    const article = await AiArticle.findOne(query).populate(
+      "author",
+      "username email avatar"
+    );
 
     if (!article) {
       return res.status(404).json({
         success: false,
         message: "Article not found or not published",
       });
+    }
+
+    if (!article.slug) {
+      const baseSlug = article.title ? article.title.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w\-]+/g, "") : "untitled";
+      article.slug = baseSlug;
+      await article.save();
     }
 
     res.status(200).json({

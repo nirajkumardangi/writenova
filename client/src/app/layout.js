@@ -2,6 +2,33 @@ import "./globals.css";
 
 import { AuthProviders } from "@/providers/AuthProvider";
 
+export const metadata = {
+  title: {
+    default: "WriteNova — AI-Powered Publishing Platform",
+    template: "%s | WriteNova",
+  },
+  description:
+    "WriteNova is an elegant publishing platform for modern writers, powered by AI story generation, seamless editor experience, and audience insights.",
+  keywords: ["blogging", "writing", "AI article generator", "publishing platform", "WriteNova"],
+  authors: [{ name: "WriteNova Team" }],
+  creator: "WriteNova",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://writenova.app",
+    siteName: "WriteNova",
+    title: "WriteNova — AI-Powered Publishing Platform",
+    description:
+      "WriteNova is an elegant publishing platform for modern writers, powered by AI story generation, seamless editor experience, and audience insights.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WriteNova — AI-Powered Publishing Platform",
+    description:
+      "WriteNova is an elegant publishing platform for modern writers, powered by AI story generation.",
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html

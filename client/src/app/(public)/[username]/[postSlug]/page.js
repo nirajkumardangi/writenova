@@ -42,9 +42,9 @@ export default function PostPublicPage() {
         const res = await api.get(`/editor/public/${postId}`);
         if (res.data.success) {
           setArticle(res.data.article);
-          // Set document title dynamically
-          if (res.data.article?.title) {
-            document.title = `${res.data.article.title} - WriteNova`;
+          const articleSlug = res.data.article?.slug || (res.data.article?.title ? res.data.article.title.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w\-]+/g, "") : "");
+          if (articleSlug && postId !== articleSlug && typeof window !== "undefined") {
+            window.history.replaceState(null, "", `/${username}/${articleSlug}`);
           }
         }
       } catch (err) {

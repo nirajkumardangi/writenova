@@ -3,6 +3,11 @@ import env from "./env.js";
 
 const redisClient = createClient({
   url: env.REDIS_URL,
+  pingInterval: 10000,
+  socket: {
+    tls: true,
+    rejectUnauthorized: false
+  }
 });
 
 redisClient.on("error", (err) => {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Bookmark, Heart, MessageCircle, MoreHorizontal, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
+import { getStorySlug } from "@/lib/slugify";
 
 export default function Feed() {
   const [activeTab, setActiveTab] = useState("for-you");
@@ -161,7 +162,7 @@ export default function Feed() {
 
                 {/* Title & Excerpt & Image */}
                 <Link
-                  href={`/${authorVal}/${storyId}`}
+                  href={`/${authorVal}/${getStorySlug(story)}`}
                   className="flex justify-between items-start gap-6 group/link cursor-pointer block"
                 >
                   <div className="flex-1 flex flex-col gap-1">

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { BookOpen, Calendar, Sparkles, Loader2, FileText } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
+import { getStorySlug } from "@/lib/slugify";
 
 export default function UserPublicPage() {
   const params = useParams();
@@ -166,7 +167,7 @@ export default function UserPublicPage() {
 
                   {/* Title & Excerpt & Image */}
                   <Link
-                    href={`/${username}/${story._id}`}
+                    href={`/${username}/${getStorySlug(story)}`}
                     className="flex justify-between items-start gap-6 group/link cursor-pointer block"
                   >
                     <div className="flex-1 flex flex-col gap-1">
