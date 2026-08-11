@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Like, Comment, Bookmark, Follow } from "./social.model.js";
 import AiArticle from "../ai/ai.model.js";
+import Notification from "../notifications/notification.model.js";
 
 // ────────── LIKES ──────────
 
@@ -19,6 +20,19 @@ export async function toggleLike(req, res, next) {
 
     await Like.create({ user: userId, article: articleId });
     const likeCount = await Like.countDocuments({ article: articleId });
+
+    // Trigger notification for author
+    const articleDoc = await AiArticle.findById(articleId).select("author title");
+    if (articleDoc && articleDoc.author.toString() !== userId.toString()) {
+      await Notification.create({
+        recipient: articleDoc.author,
+        sender: userId,
+        type: "like",
+        article: articleId,
+        message: `liked your story "${articleDoc.title}"`,
+      });
+    }
+
     res.json({ success: true, liked: true, likeCount });
   } catch (error) {
     next(error);
@@ -69,6 +83,18 @@ export async function createComment(req, res, next) {
     });
 
     const populated = await Comment.findById(comment._id).populate("user", "username avatar");
+
+    // Trigger notification for author
+    const articleDoc = await AiArticle.findById(articleId).select("author title");
+    if (articleDoc && articleDoc.author.toString() !== userId.toString()) {
+      await Notification.create({
+        recipient: articleDoc.author,
+        sender: userId,
+        type: "comment",
+        article: articleId,
+        message: `responded to your story "${articleDoc.title}"`,
+      });
+    }
 
     res.status(201).json({ success: true, comment: populated });
   } catch (error) {
@@ -188,6 +214,15 @@ export async function toggleFollow(req, res, next) {
 
     await Follow.create({ follower: currentUserId, following: targetUserId });
     const followerCount = await Follow.countDocuments({ following: targetUserId });
+
+    // Trigger notification for followed user
+    await Notification.create({
+      recipient: targetUserId,
+      sender: currentUserId,
+      type: "follow",
+      message: `started following you`,
+    });
+
     res.json({ success: true, following: true, followerCount });
   } catch (error) {
     next(error);

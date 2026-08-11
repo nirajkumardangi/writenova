@@ -1,7 +1,8 @@
-import { Bell, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import Link from "next/link";
 import UserMenu from "./UserMenu";
 import SearchBar from "./SearchBar";
+import NotificationsMenu from "./NotificationsMenu";
 
 export default function AuthenticatedNavbar() {
   return (
@@ -9,7 +10,7 @@ export default function AuthenticatedNavbar() {
       <div className="flex items-center gap-4 lg:gap-6">
         <Link
           href="/dashboard"
-          className="font-serif text-[1.4rem] md:text-[1.6rem] font-bold tracking-[-0.01em] text-black"
+          className="font-serif text-[1.4rem] md:text-[1.6rem] font-bold tracking-[-0.01em] text-black hover:opacity-80 transition-opacity"
         >
           WriteNova
         </Link>
@@ -26,9 +27,7 @@ export default function AuthenticatedNavbar() {
           <span className="text-[14px] font-medium">Write</span>
         </Link>
 
-        <button className="text-gray-500 hover:text-black transition-colors">
-          <Bell className="h-5 w-5 stroke-[1.5]" />
-        </button>
+        <NotificationsMenu />
 
         <UserMenu />
       </div>

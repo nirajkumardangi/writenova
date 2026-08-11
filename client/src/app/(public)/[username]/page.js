@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { BookOpen, Calendar, Sparkles, Loader2, FileText, Settings, Heart, Bookmark, MessageCircle, UserPlus, Check } from "lucide-react";
+import { BookOpen, Calendar, Sparkles, Loader2, FileText, Heart, Bookmark, MessageCircle, UserPlus, Check } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { getStorySlug } from "@/lib/slugify";
 import { useCurrentUser } from "@/features/auth/hooks";
-import EditProfileModal from "@/components/dashboard/EditProfileModal";
 import CommentsDrawer from "@/components/dashboard/CommentsDrawer";
 
 export default function UserPublicPage() {
@@ -19,7 +18,6 @@ export default function UserPublicPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [likes, setLikes] = useState({});
@@ -37,7 +35,6 @@ export default function UserPublicPage() {
           setProfileUser(res.data.user);
           setArticles(res.data.articles || []);
 
-          // Fetch follow status if user is logged in
           if (res.data.user?._id) {
             try {
               const followRes = await api.get(`/social/follow/${res.data.user._id}`);
@@ -167,7 +164,7 @@ export default function UserPublicPage() {
   const authorName = profileUser.username || profileUser.email?.split("@")[0] || "Author";
   const initials = authorName.substring(0, 2).toUpperCase();
   const authorBg = getAuthorBg(profileUser._id);
-  const isOwner = currentUser && currentUser.username === profileUser.username;
+  const isOwner = currentUser && (currentUser.username === profileUser.username || currentUser._id === profileUser._id);
 
   return (
     <div className="mx-auto max-w-4xl py-8 px-4 sm:px-6 animate-in fade-in duration-300">
@@ -196,14 +193,7 @@ export default function UserPublicPage() {
               <p className="text-xs text-gray-400 font-semibold mt-0.5">@{profileUser.username || "user"}</p>
             </div>
 
-            {isOwner ? (
-              <button
-                onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-full text-xs font-bold transition-all self-center sm:self-auto cursor-pointer"
-              >
-                <Settings className="h-3.5 w-3.5" /> Edit Profile
-              </button>
-            ) : (
+            {!isOwner && (
               <button
                 onClick={toggleFollow}
                 className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold transition-all self-center sm:self-auto cursor-pointer border ${
@@ -343,15 +333,6 @@ export default function UserPublicPage() {
           </div>
         )}
       </div>
-
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onProfileSaved={(updated) => {
-          setProfileUser(updated);
-        }}
-      />
 
       {/* Comments Drawer */}
       <CommentsDrawer

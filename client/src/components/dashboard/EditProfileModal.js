@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, User, Loader2 } from "lucide-react";
+import { X, Check, User, Loader2, Upload } from "lucide-react";
 import { useCurrentUser } from "@/features/auth/hooks";
 import api from "@/lib/api";
 
@@ -18,6 +18,23 @@ export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
   const [success, setSuccess] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size must be less than 5MB");
+      return;
+    }
+
+    setError(null);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatar(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,11 +114,27 @@ export default function EditProfileModal({ isOpen, onClose, onProfileSaved }) {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
-                Avatar Image URL (Optional)
+                Profile Photo
               </label>
+              <div className="flex flex-wrap gap-3 items-center mb-2">
+                <label
+                  htmlFor="modal-avatar-upload"
+                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <Upload className="h-4 w-4" /> Upload Image from Device
+                </label>
+                <input
+                  id="modal-avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageFileChange}
+                  className="hidden"
+                />
+                <span className="text-xs text-gray-400 font-medium">OR paste URL below</span>
+              </div>
               <input
                 type="url"
-                value={avatar}
+                value={avatar.startsWith("data:") ? "" : avatar}
                 onChange={(e) => setAvatar(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl text-xs font-medium focus:outline-none focus:border-black focus:bg-white transition-all text-gray-900"
                 placeholder="https://example.com/avatar.png"
